@@ -8,9 +8,8 @@ studentLevel: "phd"
 graduated: false
 order: 1
 avatar: "/images/team/sample-yang-yikang.svg"
-email: "contact@yangs.ai"
-website: "https://yangs.ai"
-updatedOn: "2026-03-01"
+email: "yangyikang23s@ict.ac.cn"
+updatedOn: "2026-03-08"
 ---
 
 ## Profile

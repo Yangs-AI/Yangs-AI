@@ -5,13 +5,11 @@ affiliation: "YangsAI"
 summary: "Works on multimodal reasoning, benchmark construction, and culturally-aware evaluation."
 memberType: "student"
 studentLevel: "master"
-graduated: true
-graduationYear: 2025
+graduated: false
 order: 2
 avatar: "/images/team/sample-peng-luzhou.svg"
-email: "contact@yangs.ai"
-website: "https://yangs.ai"
-updatedOn: "2026-02-20"
+email: "pengluzhou24s@ict.ac.cn"
+updatedOn: "2026-03-08"
 ---
 
 ## Profile
