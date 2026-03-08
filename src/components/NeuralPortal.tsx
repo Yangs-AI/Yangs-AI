@@ -622,7 +622,7 @@ export default function NeuralPortal() {
       </div>
 
       <motion.div
-        className="absolute z-20 flex h-24 w-28 -translate-x-1/2 -translate-y-1/2 cursor-grab items-center justify-center rounded-[58%_42%_49%_51%/48%_56%_44%_52%] border border-zinc-100/24 bg-[radial-gradient(circle_at_42%_36%,rgba(236,241,249,0.1),rgba(23,24,30,0.94)_64%)] text-center shadow-[0_8px_22px_rgba(4,6,12,0.54)] backdrop-blur-sm active:cursor-grabbing"
+        className="absolute z-20 flex h-20 w-24 -translate-x-1/2 -translate-y-1/2 cursor-grab items-center justify-center rounded-[58%_42%_49%_51%/48%_56%_44%_52%] border border-zinc-100/24 bg-[radial-gradient(circle_at_42%_36%,rgba(236,241,249,0.1),rgba(23,24,30,0.94)_64%)] text-center shadow-[0_8px_22px_rgba(4,6,12,0.54)] backdrop-blur-sm active:cursor-grabbing md:h-24 md:w-28"
         style={{ left: `${corePosition.x}%`, top: `${corePosition.y}%` }}
         onPointerDown={handleCorePointerDown}
         animate={{
@@ -657,7 +657,7 @@ export default function NeuralPortal() {
           }
         }}
       >
-        <span className="font-tech relative z-10 text-sm font-semibold tracking-[0.16em] text-zinc-100/88">
+        <span className="font-tech relative z-10 text-xs font-semibold tracking-[0.16em] text-zinc-100/88 md:text-sm">
           {coreNode.label}
         </span>
       </motion.div>

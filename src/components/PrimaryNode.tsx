@@ -107,7 +107,7 @@ export default function PrimaryNode({
     >
       <motion.button
         type="button"
-        className={`group relative flex h-[5.3rem] w-[6.9rem] cursor-grab items-center justify-center border border-zinc-100/24 text-center shadow-[0_8px_18px_rgba(4,6,12,0.52)] backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-100/70 active:cursor-grabbing ${shapeVariants[node.id]} ${toneVariants[node.id]}`}
+        className={`group relative flex h-[4.35rem] w-[5.85rem] cursor-grab items-center justify-center border border-zinc-100/24 text-center shadow-[0_8px_18px_rgba(4,6,12,0.52)] backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-100/70 active:cursor-grabbing md:h-[5.3rem] md:w-[6.9rem] ${shapeVariants[node.id]} ${toneVariants[node.id]}`}
         onFocus={onHoverStart}
         onBlur={onHoverEnd}
         onPointerDown={onPointerDown}
@@ -143,7 +143,7 @@ export default function PrimaryNode({
       >
         <motion.span
           layoutId={`node-title-${node.id}`}
-          className="font-tech relative z-10 text-[0.72rem] font-semibold tracking-[0.08em] text-zinc-100/90"
+          className="font-tech relative z-10 text-[0.64rem] font-semibold tracking-[0.08em] text-zinc-100/90 md:text-[0.72rem]"
         >
           {node.label}
         </motion.span>
@@ -160,7 +160,7 @@ export default function PrimaryNode({
             target={item.external ? "_blank" : undefined}
             rel={item.external ? "noreferrer" : undefined}
             data-draft-link={item.draft ? "true" : undefined}
-            className={`absolute left-1/2 top-1/2 z-[2] min-w-[5.8rem] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-2xl border border-zinc-100/24 bg-[radial-gradient(circle_at_38%_26%,rgba(239,243,250,0.14),rgba(21,22,28,0.9)_64%)] px-3 py-1.5 text-center text-[0.63rem] tracking-wide text-zinc-100/94 shadow-[0_8px_18px_rgba(6,8,14,0.42)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-200/85 ${expanded ? "pointer-events-auto" : "pointer-events-none"}`}
+            className={`absolute left-1/2 top-1/2 z-[2] min-w-[4.9rem] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-2xl border border-zinc-100/24 bg-[radial-gradient(circle_at_38%_26%,rgba(239,243,250,0.14),rgba(21,22,28,0.9)_64%)] px-2.5 py-1 text-center text-[0.56rem] tracking-wide text-zinc-100/94 shadow-[0_8px_18px_rgba(6,8,14,0.42)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-200/85 md:min-w-[5.8rem] md:px-3 md:py-1.5 md:text-[0.63rem] ${expanded ? "pointer-events-auto" : "pointer-events-none"}`}
             tabIndex={expanded ? 0 : -1}
             initial={false}
             animate={{
