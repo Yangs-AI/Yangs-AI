@@ -1,0 +1,16 @@
+---
+import PaperList from "../../../components/PaperList.astro";
+import { papers } from "../../../data/papers";
+import SubpageLayout from "../../../layouts/SubpageLayout.astro";
+---
+
+<SubpageLayout title="Research Papers | Yangs AI" description="Paper list for Yangs AI research.">
+  <a href="/research" class="text-sm text-zinc-300 hover:text-zinc-100">← Back to Research</a>
+  <h1 class="mt-4 text-4xl font-semibold tracking-tight text-zinc-100 md:text-5xl">Papers</h1>
+  <p class="mt-4 max-w-3xl text-base leading-relaxed text-zinc-300">
+    Full paper index. For a curated entry point, open
+    <a href="/research/papers/selected" class="underline decoration-zinc-400 underline-offset-2 hover:decoration-zinc-200">Selected Papers</a>.
+  </p>
+
+  <PaperList papers={papers} emptyMessage="Add your first paper in src/data/papers.ts." />
+</SubpageLayout>

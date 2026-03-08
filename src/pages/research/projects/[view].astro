@@ -1,0 +1,31 @@
+---
+import ProjectList from "../../../components/ProjectList.astro";
+import { projects } from "../../../data/projects";
+import SubpageLayout from "../../../layouts/SubpageLayout.astro";
+
+export function getStaticPaths() {
+  return [{ params: { view: "selected" } }];
+}
+
+const { view } = Astro.params;
+
+if (view !== "selected") {
+  return Astro.redirect("/research/projects");
+}
+
+const selectedProjects = projects.filter((project) => project.selected);
+---
+
+<SubpageLayout title="Selected Projects | Yangs AI" description="Curated selected projects from Yangs AI research.">
+  <a href="/research/projects" class="text-sm text-zinc-300 hover:text-zinc-100">← All Projects</a>
+  <p class="font-tech mt-5 text-xs uppercase tracking-[0.14em] text-zinc-300">Curated</p>
+  <h1 class="mt-2 text-4xl font-semibold tracking-tight text-zinc-100 md:text-5xl">Selected Projects</h1>
+  <p class="mt-4 max-w-3xl text-base leading-relaxed text-zinc-300">
+    This page is the route-semantic subset for highlighted projects.
+  </p>
+
+  <ProjectList
+    projects={selectedProjects}
+    emptyMessage="No selected projects yet. Set selected: true in src/data/projects.ts."
+  />
+</SubpageLayout>

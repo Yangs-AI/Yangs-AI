@@ -1,0 +1,132 @@
+---
+import { getCollection } from "astro:content";
+import SubpageLayout from "../../../layouts/SubpageLayout.astro";
+
+type StudentLevel = "undergraduate" | "master" | "phd";
+
+const levelLabelMap: Record<StudentLevel, string> = {
+  undergraduate: "Undergraduate",
+  master: "Master",
+  phd: "PhD",
+};
+
+const studentStatusText = (graduated: boolean) => (graduated ? "Graduated Student" : "Current Student");
+
+const memberTypeLabel = (memberType: "employee" | "student") =>
+  memberType === "employee" ? "Employee" : "Student";
+
+const memberTypeTone = (memberType: "employee" | "student") =>
+  memberType === "employee"
+    ? "border-emerald-300/24 bg-emerald-300/10 text-emerald-100"
+    : "border-zinc-200/18 bg-white/8 text-zinc-200";
+
+const studentStatusTone = (graduated: boolean) =>
+  graduated ? "border-amber-300/24 bg-amber-300/10 text-amber-100" : "border-sky-300/24 bg-sky-300/10 text-sky-100";
+
+const studentLevelTone = "border-violet-300/24 bg-violet-300/10 text-violet-100";
+
+const joinClassNames = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" ");
+
+type MemberData = {
+  memberType: "employee" | "student";
+  studentLevel?: StudentLevel;
+  graduated?: boolean;
+  graduationYear?: number;
+};
+
+export async function getStaticPaths() {
+  const entries = await getCollection("team-members");
+  return entries.flatMap((entry) => {
+    const baseSlug = entry.id.replace(/\.md$/, "");
+    return [
+      { params: { slug: baseSlug } },
+      { params: { slug: `${baseSlug}.md` } },
+    ];
+  });
+}
+
+const { slug } = Astro.params;
+if (!slug) {
+  throw new Error("Member slug is required");
+}
+
+const entries = await getCollection("team-members");
+const entry = entries.find((item) => {
+  const itemSlug = item.id.replace(/\.md$/, "");
+  return item.id === slug || itemSlug === slug;
+});
+if (!entry) {
+  throw new Error(`Team member markdown not found for slug: ${slug}`);
+}
+
+const { Content } = await entry.render();
+const data = entry.data;
+const name = data.name;
+const role = data.role;
+const affiliation = data.affiliation;
+const summary = data.summary;
+const avatar = data.avatar;
+const email = data.email;
+const website = data.website;
+const updatedOn = data.updatedOn;
+const memberType = (data as MemberData).memberType;
+const studentLevel = (data as MemberData).studentLevel;
+const graduated = memberType === "student" ? (data as MemberData).graduated ?? false : false;
+const graduationYear = memberType === "student" ? (data as MemberData).graduationYear : undefined;
+---
+
+<SubpageLayout title={`${name} | Team | Yangs AI`} description={summary}>
+  <a href="/team/members" class="text-sm text-zinc-300 hover:text-zinc-100">← Back to Members</a>
+
+  <p class="font-tech mt-5 text-xs uppercase tracking-[0.12em] text-zinc-300">Team Member</p>
+  <div class="mt-2 flex flex-wrap items-center gap-4">
+    {avatar ? (
+      <img
+        src={avatar}
+        alt={`${name} portrait`}
+        class="h-24 w-24 rounded-full border border-white/16 object-cover"
+        loading="lazy"
+      />
+    ) : null}
+    <div>
+      <h1 class="text-4xl font-semibold tracking-tight text-zinc-100 md:text-5xl">{name}</h1>
+      <p class="mt-2 text-sm text-zinc-300">{role} · {affiliation}</p>
+      <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+        <span class={joinClassNames("rounded-full border px-2 py-0.5", memberTypeTone(memberType))}>
+          {memberTypeLabel(memberType)}
+        </span>
+        {memberType === "student" && studentLevel ? (
+          <span class={joinClassNames("rounded-full border px-2 py-0.5", studentLevelTone)}>
+            {levelLabelMap[studentLevel]}
+          </span>
+        ) : null}
+        {memberType === "student" ? (
+          <span class={joinClassNames("rounded-full border px-2 py-0.5", studentStatusTone(graduated))}>
+            {studentStatusText(graduated)}
+          </span>
+        ) : null}
+        {memberType === "student" && graduated && graduationYear ? (
+          <span class="text-zinc-400">Class of {graduationYear}</span>
+        ) : null}
+      </div>
+    </div>
+  </div>
+  {updatedOn ? <p class="mt-2 text-xs text-zinc-400">Updated: {updatedOn}</p> : null}
+
+  <div class="mt-4 flex flex-wrap gap-2">
+    {email ? (
+      <a href={`mailto:${email}`} class="rounded-lg border border-zinc-100/24 bg-white/8 px-3 py-1.5 text-xs text-zinc-100 hover:bg-white/16">
+        Email
+      </a>
+    ) : null}
+    {website ? (
+      <a href={website} target="_blank" rel="noreferrer" class="rounded-lg border border-zinc-100/24 bg-white/8 px-3 py-1.5 text-xs text-zinc-100 hover:bg-white/16">
+        Website
+      </a>
+    ) : null}
+  </div>
+
+  <article class="mt-8 rounded-xl border border-white/12 bg-white/5 px-6 py-7 text-zinc-200 md:px-8 md:py-8 [&_h2]:mt-6 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:text-zinc-100 [&_p]:mt-3 [&_p]:leading-relaxed [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5 [&_.callout]:mt-4 [&_.callout]:rounded-lg [&_.callout]:border [&_.callout]:border-white/16 [&_.callout]:bg-white/7 [&_.callout]:px-4 [&_.callout]:py-3 [&_.callout.note]:border-sky-300/38 [&_.callout.note]:bg-sky-300/12">
+    <Content />
+  </article>
+</SubpageLayout>

@@ -1,0 +1,17 @@
+---
+import ProjectList from "../../../components/ProjectList.astro";
+import { projects } from "../../../data/projects";
+import SubpageLayout from "../../../layouts/SubpageLayout.astro";
+---
+
+<SubpageLayout title="Research Projects | Yangs AI" description="Project list for Yangs AI research.">
+  <a href="/research" class="text-sm text-zinc-300 hover:text-zinc-100">← Back to Research</a>
+  <h1 class="mt-4 text-4xl font-semibold tracking-tight text-zinc-100 md:text-5xl">Projects</h1>
+  <p class="mt-4 max-w-3xl text-base leading-relaxed text-zinc-300">
+    Browse current and historical research projects by topic, timeline, and artifact status. For curated entries,
+    open
+    <a href="/research/projects/selected" class="underline decoration-zinc-400 underline-offset-2 hover:decoration-zinc-200">Selected Projects</a>.
+  </p>
+
+  <ProjectList projects={projects} emptyMessage="Add your first project in src/data/projects.ts." />
+</SubpageLayout>

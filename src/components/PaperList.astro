@@ -1,0 +1,254 @@
+---
+import type { PaperEntry } from "../data/papers";
+
+interface Props {
+  papers: PaperEntry[];
+  emptyMessage?: string;
+}
+
+const { papers, emptyMessage = "No papers yet." } = Astro.props;
+
+const sortedPapers = [...papers].sort(
+  (a, b) => new Date(b.publishedOn).getTime() - new Date(a.publishedOn).getTime(),
+);
+
+const formatDate = (value: string) =>
+  new Date(`${value}T00:00:00`).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
+---
+
+<section class="mt-8 space-y-4">
+  <p class="text-xs text-zinc-400">Author roles use soft labels for quick scanning without visual noise.</p>
+
+  {sortedPapers.length === 0 ? (
+    <div class="rounded-xl border border-white/15 bg-white/5 p-6 text-zinc-300">{emptyMessage}</div>
+  ) : (
+    sortedPapers.map((paper) => (
+      <article class="rounded-xl border border-white/15 bg-white/5 p-5">
+        <h2 class="text-xl font-semibold leading-snug text-zinc-100">{paper.title}</h2>
+        <p class="mt-2 text-sm text-zinc-300">
+          <span class="font-medium text-zinc-200">{paper.venue}</span>
+          <span class="mx-2 text-zinc-500">|</span>
+          <time datetime={paper.publishedOn}>{formatDate(paper.publishedOn)}</time>
+        </p>
+        <div class="mt-2 flex flex-wrap items-center gap-2 text-sm leading-relaxed text-zinc-300">
+          {paper.authors.map((author, authorIndex) => (
+            <span class="inline-flex items-center gap-1.5">
+              <span>{author.name}</span>
+              {author.isFirstAuthor ? (
+                <span class="inline-flex items-center gap-1 rounded-full border border-violet-200/24 bg-violet-200/10 px-1.5 py-0.5 text-[0.62rem] uppercase tracking-[0.08em] text-violet-100">
+                  <span class="h-1.5 w-1.5 rounded-full bg-violet-200/85" aria-hidden="true"></span>
+                  First
+                </span>
+              ) : null}
+              {author.isCorrespondingAuthor ? (
+                <span class="inline-flex items-center gap-1 rounded-full border border-sky-200/24 bg-sky-200/10 px-1.5 py-0.5 text-[0.62rem] uppercase tracking-[0.08em] text-sky-100">
+                  <span class="h-1.5 w-1.5 rounded-full bg-sky-200/85" aria-hidden="true"></span>
+                  Corr.
+                </span>
+              ) : null}
+              {authorIndex < paper.authors.length - 1 ? (
+                <span class="px-0.5 text-zinc-500/80" aria-hidden="true">•</span>
+              ) : null}
+            </span>
+          ))}
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          {paper.bibtex ? (
+            <button
+              type="button"
+              data-bibtex-open={paper.id}
+              class="cursor-pointer rounded-lg border border-zinc-100/24 bg-white/8 px-3 py-1.5 text-xs text-zinc-100 hover:bg-white/16"
+            >
+              BibTeX
+            </button>
+          ) : (
+            <span class="rounded-lg border border-zinc-100/12 bg-white/4 px-3 py-1.5 text-xs text-zinc-400">BibTeX N/A</span>
+          )}
+
+          {paper.paperUrl ? (
+            <a
+              href={paper.paperUrl}
+              target="_blank"
+              rel="noreferrer"
+              class="rounded-lg border border-zinc-100/24 bg-white/8 px-3 py-1.5 text-xs text-zinc-100 hover:bg-white/16"
+            >
+              Paper
+            </a>
+          ) : (
+            <span class="rounded-lg border border-zinc-100/12 bg-white/4 px-3 py-1.5 text-xs text-zinc-400">Paper N/A</span>
+          )}
+
+          {paper.codeUrl ? (
+            <a
+              href={paper.codeUrl}
+              target="_blank"
+              rel="noreferrer"
+              class="rounded-lg border border-zinc-100/24 bg-white/8 px-3 py-1.5 text-xs text-zinc-100 hover:bg-white/16"
+            >
+              Code
+            </a>
+          ) : (
+            <span class="rounded-lg border border-zinc-100/12 bg-white/4 px-3 py-1.5 text-xs text-zinc-400">Code N/A</span>
+          )}
+        </div>
+
+        {paper.bibtex ? (
+          <dialog
+            id={`bibtex-dialog-${paper.id}`}
+            class="bibtex-dialog m-auto w-[min(92vw,44rem)] rounded-xl border border-zinc-100/18 bg-[rgba(16,16,20,0.97)] p-0 text-zinc-100 shadow-[0_28px_60px_rgba(0,0,0,0.5)] backdrop:bg-[rgba(8,8,12,0.62)] backdrop:transition-opacity backdrop:duration-250"
+          >
+            <div class="border-b border-white/10 px-4 py-3">
+              <div class="flex items-start justify-between gap-3">
+                <p class="pr-4 text-sm font-medium leading-relaxed">{paper.title}</p>
+                <div class="flex shrink-0 items-center gap-2">
+                  <button
+                    type="button"
+                    data-bibtex-copy={paper.id}
+                    class="cursor-pointer rounded-md border border-white/18 bg-white/6 px-2 py-1 text-xs text-zinc-200 hover:bg-white/14"
+                  >
+                    Copy
+                  </button>
+                  <button
+                    type="button"
+                    data-bibtex-close={paper.id}
+                    class="cursor-pointer rounded-md border border-white/18 bg-white/6 px-2 py-1 text-xs text-zinc-200 hover:bg-white/14"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+            <pre class="max-h-[62vh] overflow-auto px-4 py-3 text-xs leading-relaxed text-zinc-200">{paper.bibtex}</pre>
+          </dialog>
+        ) : null}
+      </article>
+    ))
+  )}
+</section>
+
+<style>
+  :global(.bibtex-dialog) {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+    transition: opacity 220ms ease, transform 260ms cubic-bezier(0.2, 0.75, 0.2, 1);
+  }
+
+  :global(.bibtex-dialog[open].is-visible) {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  :global(.bibtex-dialog::backdrop) {
+    opacity: 0;
+    transition: opacity 220ms ease;
+  }
+
+  :global(.bibtex-dialog[open].is-visible::backdrop) {
+    opacity: 1;
+  }
+</style>
+
+<script>
+  const closeDialogWithAnimation = (dialog) => {
+    if (!(dialog instanceof HTMLDialogElement)) {
+      return;
+    }
+
+    dialog.classList.remove("is-visible");
+    window.setTimeout(() => {
+      if (dialog.open) {
+        dialog.close();
+      }
+    }, 220);
+  };
+
+  const openButtons = document.querySelectorAll("[data-bibtex-open]");
+
+  openButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const paperId = button.getAttribute("data-bibtex-open");
+      const dialog = document.getElementById(`bibtex-dialog-${paperId}`);
+      if (dialog instanceof HTMLDialogElement) {
+        dialog.showModal();
+        window.requestAnimationFrame(() => {
+          dialog.classList.add("is-visible");
+        });
+      }
+    });
+  });
+
+  const closeButtons = document.querySelectorAll("[data-bibtex-close]");
+  closeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const paperId = button.getAttribute("data-bibtex-close");
+      const dialog = document.getElementById(`bibtex-dialog-${paperId}`);
+      if (dialog instanceof HTMLDialogElement) {
+        closeDialogWithAnimation(dialog);
+      }
+    });
+  });
+
+  const copyButtons = document.querySelectorAll("[data-bibtex-copy]");
+  copyButtons.forEach((button) => {
+    button.addEventListener("click", async () => {
+      const paperId = button.getAttribute("data-bibtex-copy");
+      const dialog = document.getElementById(`bibtex-dialog-${paperId}`);
+      if (!(dialog instanceof HTMLDialogElement)) {
+        return;
+      }
+
+      const content = dialog.querySelector("pre")?.textContent ?? "";
+      if (!content.trim()) {
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(content);
+        if (button instanceof HTMLButtonElement) {
+          const original = button.textContent;
+          button.textContent = "Copied";
+          window.setTimeout(() => {
+            button.textContent = original;
+          }, 1200);
+        }
+      } catch {
+        if (button instanceof HTMLButtonElement) {
+          const original = button.textContent;
+          button.textContent = "Failed";
+          window.setTimeout(() => {
+            button.textContent = original;
+          }, 1200);
+        }
+      }
+    });
+  });
+
+  const dialogs = document.querySelectorAll("dialog[id^='bibtex-dialog-']");
+  dialogs.forEach((dialog) => {
+    dialog.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLDialogElement)) return;
+
+      const rect = target.getBoundingClientRect();
+      const clickedInside =
+        rect.top <= event.clientY &&
+        event.clientY <= rect.top + rect.height &&
+        rect.left <= event.clientX &&
+        event.clientX <= rect.left + rect.width;
+
+      if (!clickedInside) {
+        closeDialogWithAnimation(target);
+      }
+    });
+
+    dialog.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      closeDialogWithAnimation(dialog);
+    });
+  });
+</script>

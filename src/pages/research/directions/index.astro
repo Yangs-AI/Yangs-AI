@@ -1,0 +1,50 @@
+---
+import SubpageLayout from "../../../layouts/SubpageLayout.astro";
+
+type DirectionFrontmatter = {
+  title?: string;
+  summary?: string;
+  order?: number;
+  updatedOn?: string;
+};
+
+const directionModules = import.meta.glob("/src/content/directions/*.md", { eager: true });
+
+const directions = Object.entries(directionModules)
+  .map(([path, mod]) => {
+    const slug = path.split("/").pop()?.replace(/\.md$/, "") || "";
+    const frontmatter = (mod as { frontmatter?: DirectionFrontmatter }).frontmatter ?? {};
+    return {
+      slug,
+      title: frontmatter.title ?? slug,
+      summary: frontmatter.summary ?? "No summary yet.",
+      order: frontmatter.order ?? 999,
+      updatedOn: frontmatter.updatedOn,
+    };
+  })
+  .sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
+---
+
+<SubpageLayout title="Research Directions | Yangs AI" description="Long-term research directions for Yangs AI.">
+  <a href="/research" class="text-sm text-zinc-300 hover:text-zinc-100">← Back to Research</a>
+  <h1 class="mt-4 text-4xl font-semibold tracking-tight text-zinc-100 md:text-5xl">Directions</h1>
+  <p class="mt-4 max-w-3xl text-base leading-relaxed text-zinc-300">
+    Browse active and emerging direction tracks. Each direction has its own page with detailed markdown content.
+  </p>
+
+  <section class="mt-8 grid gap-4 md:grid-cols-2">
+    {directions.map((direction) => (
+      <a
+        href={`/research/directions/${direction.slug}`}
+        class="rounded-xl border border-white/15 bg-white/5 p-5 hover:bg-white/10"
+      >
+        <p class="font-tech text-[0.66rem] uppercase tracking-[0.12em] text-zinc-300">Direction</p>
+        <h2 class="mt-2 text-xl font-medium text-zinc-100">{direction.title}</h2>
+        <p class="mt-2 text-sm leading-relaxed text-zinc-300">{direction.summary}</p>
+        {direction.updatedOn ? (
+          <p class="mt-3 text-xs text-zinc-400">Updated: {direction.updatedOn}</p>
+        ) : null}
+      </a>
+    ))}
+  </section>
+</SubpageLayout>

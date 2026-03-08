@@ -1,0 +1,151 @@
+---
+import SubpageLayout from "../../../layouts/SubpageLayout.astro";
+
+type DirectionFrontmatter = {
+  title?: string;
+  summary?: string;
+  updatedOn?: string;
+};
+
+type DirectionModule = {
+  frontmatter?: DirectionFrontmatter;
+  Content: unknown;
+};
+
+const directionModules = import.meta.glob("/src/content/directions/*.md", { eager: true });
+
+export function getStaticPaths() {
+  const staticPathModules = import.meta.glob("/src/content/directions/*.md");
+  return Object.keys(staticPathModules).map((path) => {
+    const slug = path.split("/").pop()?.replace(/\.md$/, "") || "";
+    return { params: { slug } };
+  });
+}
+
+const { slug } = Astro.params;
+const matchedPath = Object.keys(directionModules).find((path) => path.endsWith(`/${slug}.md`));
+
+if (!matchedPath) {
+  throw new Error(`Direction markdown not found for slug: ${slug}`);
+}
+
+const module = directionModules[matchedPath] as DirectionModule;
+const frontmatter = module.frontmatter ?? {};
+const title = frontmatter.title ?? slug;
+const summary = frontmatter.summary ?? "Direction detail page.";
+const updatedOn = frontmatter.updatedOn;
+const Content = module.Content as (props: Record<string, never>) => unknown;
+---
+
+<SubpageLayout title={`${title} | Directions | Yangs AI`} description={summary}>
+  <a href="/research/directions" class="text-sm text-zinc-300 hover:text-zinc-100">← Back to Directions</a>
+
+  <p class="font-tech mt-5 text-xs uppercase tracking-[0.12em] text-zinc-300">Direction</p>
+  <h1 class="mt-2 text-4xl font-semibold tracking-tight text-zinc-100 md:text-5xl">{title}</h1>
+  {updatedOn ? <p class="mt-3 text-xs text-zinc-400">Updated: {updatedOn}</p> : null}
+
+  <article data-direction-prose class="direction-prose mt-8 rounded-xl border border-white/12 bg-white/5 px-6 py-7 text-zinc-200 md:px-8 md:py-8">
+    <Content />
+  </article>
+</SubpageLayout>
+
+<style>
+  :global(.direction-prose) {
+    line-height: 1.72;
+  }
+
+  :global(.direction-prose h2) {
+    margin-top: 2rem;
+    margin-bottom: 0.7rem;
+    font-size: 1.55rem;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+    color: rgb(244 244 245);
+  }
+
+  :global(.direction-prose h3) {
+    margin-top: 1.45rem;
+    margin-bottom: 0.6rem;
+    font-size: 1.16rem;
+    font-weight: 620;
+    color: rgb(228 228 231);
+  }
+
+  :global(.direction-prose p) {
+    margin-top: 0.8rem;
+    color: rgb(221 221 226);
+  }
+
+  :global(.direction-prose ul),
+  :global(.direction-prose ol) {
+    margin-top: 0.75rem;
+    padding-left: 1.35rem;
+  }
+
+  :global(.direction-prose li + li) {
+    margin-top: 0.35rem;
+  }
+
+  :global(.direction-prose blockquote) {
+    margin-top: 1rem;
+    border-left: 3px solid rgb(148 163 184 / 0.7);
+    background: linear-gradient(90deg, rgba(148, 163, 184, 0.16), rgba(148, 163, 184, 0.03));
+    padding: 0.7rem 0.9rem;
+    color: rgb(226 232 240);
+  }
+
+  :global(.direction-prose pre) {
+    margin-top: 0.95rem;
+    overflow-x: auto;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    border-radius: 0.75rem;
+    background: rgba(18, 20, 26, 0.92);
+    padding: 0.85rem 0.95rem;
+  }
+
+  :global(.direction-prose code:not(pre code)) {
+    border: 1px solid rgb(255 255 255 / 0.16);
+    border-radius: 0.4rem;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0.08rem 0.35rem;
+    font-size: 0.88em;
+  }
+
+  :global(.direction-prose table) {
+    width: 100%;
+    margin-top: 1rem;
+    border-collapse: collapse;
+    font-size: 0.94rem;
+  }
+
+  :global(.direction-prose th),
+  :global(.direction-prose td) {
+    border: 1px solid rgb(255 255 255 / 0.12);
+    padding: 0.5rem 0.62rem;
+    text-align: left;
+  }
+
+  :global(.direction-prose th) {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgb(244 244 245);
+    font-weight: 620;
+  }
+
+  :global(.direction-prose .callout) {
+    margin-top: 1rem;
+    border: 1px solid rgb(255 255 255 / 0.16);
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 0.75rem 0.9rem;
+  }
+
+  :global(.direction-prose .callout.note) {
+    border-color: rgb(125 211 252 / 0.42);
+    background: rgba(56, 189, 248, 0.12);
+  }
+
+  :global(.direction-prose .callout.warn) {
+    border-color: rgb(253 186 116 / 0.42);
+    background: rgba(251, 146, 60, 0.12);
+  }
+</style>

@@ -1,0 +1,77 @@
+---
+import type { ProjectEntry } from "../data/projects";
+
+interface Props {
+  projects: ProjectEntry[];
+  emptyMessage?: string;
+}
+
+const { projects, emptyMessage = "No projects yet." } = Astro.props;
+
+const sortedProjects = [...projects].sort(
+  (a, b) => new Date(b.updatedOn).getTime() - new Date(a.updatedOn).getTime(),
+);
+
+const formatDate = (value: string) =>
+  new Date(`${value}T00:00:00`).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
+
+const statusClassMap: Record<ProjectEntry["status"], string> = {
+  active: "border-emerald-400/35 bg-emerald-200/10 text-emerald-200",
+  completed: "border-sky-400/35 bg-sky-200/10 text-sky-200",
+  paused: "border-amber-400/35 bg-amber-200/10 text-amber-200",
+};
+---
+
+<section class="mt-8 space-y-4">
+  {sortedProjects.length === 0 ? (
+    <div class="rounded-xl border border-white/15 bg-white/5 p-6 text-zinc-300">{emptyMessage}</div>
+  ) : (
+    sortedProjects.map((project) => (
+      <article class="rounded-xl border border-white/15 bg-white/5 p-5">
+        <div class="flex flex-wrap items-center gap-2">
+          <h2 class="text-xl font-semibold leading-snug text-zinc-100">{project.title}</h2>
+          <span class={`rounded-full border px-2 py-0.5 text-[0.68rem] uppercase tracking-[0.1em] ${statusClassMap[project.status]}`}>
+            {project.status}
+          </span>
+        </div>
+
+        <p class="mt-2 text-sm leading-relaxed text-zinc-300">{project.summary}</p>
+        <p class="mt-2 text-sm text-zinc-400">
+          Last updated: <time datetime={project.updatedOn}>{formatDate(project.updatedOn)}</time>
+        </p>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          {project.projectUrl ? (
+            <a
+              href={project.projectUrl}
+              target="_blank"
+              rel="noreferrer"
+              class="rounded-lg border border-zinc-100/24 bg-white/8 px-3 py-1.5 text-xs text-zinc-100 hover:bg-white/16"
+            >
+              Project
+            </a>
+          ) : (
+            <span class="rounded-lg border border-zinc-100/12 bg-white/4 px-3 py-1.5 text-xs text-zinc-400">Project N/A</span>
+          )}
+
+          {project.codeUrl ? (
+            <a
+              href={project.codeUrl}
+              target="_blank"
+              rel="noreferrer"
+              class="rounded-lg border border-zinc-100/24 bg-white/8 px-3 py-1.5 text-xs text-zinc-100 hover:bg-white/16"
+            >
+              Code
+            </a>
+          ) : (
+            <span class="rounded-lg border border-zinc-100/12 bg-white/4 px-3 py-1.5 text-xs text-zinc-400">Code N/A</span>
+          )}
+        </div>
+      </article>
+    ))
+  )}
+</section>

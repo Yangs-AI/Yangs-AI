@@ -9,12 +9,14 @@ export interface NodeLink {
   label: string;
   href: string;
   external?: boolean;
+  draft?: boolean;
 }
 
 export interface SubItemLink {
   label: string;
   href: string;
   external?: boolean;
+  draft?: boolean;
 }
 
 export interface PortalNode {
@@ -26,13 +28,15 @@ export interface PortalNode {
   positionMobile: { x: number; y: number };
   subItems: SubItemLink[];
   links: NodeLink[];
+  fallbackLink?: NodeLink;
 }
 
 export const coreNode = {
   id: "core",
   label: "YangsAI",
-  description:
-    "A neural academic ecosystem for research, resources, scholarly initiatives, and people.",
+  shortDescription: "Official Yangs AI website: research, datasets, benchmarks, and initiatives for fundamental AI.",
+  detailDescription:
+    "Official Yangs AI website: research, datasets, benchmarks, and initiatives for fundamental AI.",
   positionDesktop: { x: 50, y: 50 },
   positionMobile: { x: 50, y: 42 },
 } as const;
@@ -41,112 +45,104 @@ export const portalNodes: PortalNode[] = [
   {
     id: "research",
     label: "Research",
-    shortDescription: "Papers, projects, and evolving research directions.",
+    shortDescription: "Papers, projects, and long-term research directions.",
     detailDescription:
-      "Explore current papers, active projects, long-horizon directions, and ongoing investigations across neural and AI research fronts.",
+      "Explore the research landscape of YangsAI through papers, projects, and evolving directions across neural networks, AI systems, and foundational studies.",
     positionDesktop: { x: 18, y: 21 },
     positionMobile: { x: 24, y: 16 },
     subItems: [
-      { label: "Papers", href: "#research-papers" },
-      { label: "Projects", href: "#research-projects" },
-      { label: "Directions", href: "#research-directions" },
-      { label: "Ongoing Work", href: "#research-ongoing" },
+      { label: "Papers", href: "/research/papers" },
+      { label: "Projects", href: "/research/projects" },
+      { label: "Directions", href: "/research/directions" },
     ],
     links: [
-      { label: "View Research Hub", href: "#research" },
-      { label: "Latest Working Notes", href: "#working-notes" },
+      { label: "Selected Papers", href: "/research/papers/selected" },
+      { label: "Selected Projects", href: "/research/projects/selected" },
     ],
   },
   {
     id: "resources",
     label: "Resources",
-    shortDescription: "Datasets, benchmarks, tools, and curated collections.",
+    shortDescription: "Datasets, benchmarks, and documentation for reproducible AI research.",
     detailDescription:
-      "Access research-grade assets including datasets, benchmark tracks, tooling, and carefully curated collections for reproducible AI studies.",
+      "Access research resources across datasets, benchmarks, and documentation, including representative entries such as Younger Datasets, Probing Memes, and FRESH documentation.",
     positionDesktop: { x: 82, y: 18 },
     positionMobile: { x: 78, y: 26 },
     subItems: [
       { label: "Datasets", href: "https://datasets.yangs.ai", external: true },
       { label: "Benchmarks", href: "https://benchmarks.yangs.ai", external: true },
-      { label: "Tools", href: "#resources-tools" },
-      { label: "Collections", href: "#resources-collections" },
+      { label: "Documentations", href: "https://documentations.yangs.ai", external: true, draft: true },
     ],
     links: [
       {
-        label: "datasets.yangs.ai",
-        href: "https://datasets.yangs.ai",
+        label: "Younger Datasets",
+        href: "https://datasets.yangs.ai/younger",
         external: true,
       },
       {
-        label: "benchmarks.yangs.ai",
-        href: "https://benchmarks.yangs.ai",
+        label: "Probing Memes",
+        href: "https://benchmarks.yangs.ai/probing-memes",
         external: true,
       },
+      {
+        label: "FRESH Documentation",
+        href: "https://fresh.research.jason-young.me",
+        external: true,
+      }
     ],
   },
   {
     id: "community",
     label: "Community",
     shortDescription:
-      "Journals, initiatives, organizations, events, and collaborations.",
+      "Journals and organizational activities across the YangsAI ecosystem.",
     detailDescription:
-      "Connect with broader scholarly activity across journals, academic initiatives, organizations, conferences, and collaborative programs.",
+      "Follow the scholarly and organizational side of YangsAI through hosted journals and the Yangs AI GitHub organization, where publications, code, and broader academic activities are brought together.",
     positionDesktop: { x: 33, y: 46 },
     positionMobile: { x: 21, y: 52 },
     subItems: [
-      { label: "Journals", href: "#community-journals" },
-      { label: "Initiatives", href: "#community-initiatives" },
-      { label: "Organizations", href: "#community-organizations" },
-      { label: "Events", href: "#community-events" },
-      {
-        label: "Communications of the BenchCouncil",
-        href: "#community-benchcouncil-communications",
-      },
+      { label: "Journals", href: "/community/journals" , draft: true },
+      { label: "Organizations", href: "/community/organizations" , draft: true },
     ],
     links: [
-      { label: "Scholarly Initiatives", href: "#initiatives" },
-      { label: "Community Calendar", href: "#events" },
+      { label: "Communications of the BenchCouncil", href: "/community/journals/cbench" , draft: true },
+      { label: "Yangs AI on GitHub", href: "https://github.com/yangs-ai", external: true },
     ],
   },
   {
     id: "team",
     label: "Team",
-    shortDescription: "Members, collaborators, roles, and profiles.",
+    shortDescription: "Team introduction and member profiles.",
     detailDescription:
-      "Meet researchers, engineers, and collaborators, understand role distribution, and navigate profile pages for expertise and contributions.",
+      "Get to know the YangsAI team through a concise introduction and member pages that present the people behind its research, resources, and academic activities.",
     positionDesktop: { x: 86, y: 76 },
     positionMobile: { x: 82, y: 76 },
     subItems: [
-      { label: "Members", href: "#team-members" },
-      { label: "Collaborators", href: "#team-collaborators" },
-      { label: "Roles", href: "#team-roles" },
-      { label: "Profiles", href: "#team-profiles" },
+      { label: "About", href: "/team/about" },
+      { label: "Members", href: "/team/members" },
     ],
     links: [
-      { label: "Team Directory", href: "#team" },
-      { label: "Collaboration Notes", href: "#collaboration" },
+      { label: "YANG Yikang", href: "/team/members/yang-yikang" },
+      { label: "PENG Luzhou", href: "/team/members/peng-luzhou" },
     ],
   },
   {
     id: "founder",
     label: "Founder",
-    shortDescription: "Jason Young: vision, biography, and personal site.",
+    shortDescription: "Founder of YangsAI.",
     detailDescription:
-      "Read the founding vision, biography, and long-term perspective shaping this ecosystem and its research culture.",
+      "Learn more about Jason Young, the founder of YangsAI, through his personal website and broader academic presence.",
     positionDesktop: { x: 14, y: 84 },
     positionMobile: { x: 26, y: 82 },
     subItems: [
-      { label: "Jason Young", href: "#founder-jason-young" },
-      { label: "Vision", href: "#founder-vision" },
-      { label: "Biography", href: "#founder-biography" },
-      { label: "Personal Site", href: "https://jason-young.me", external: true },
+        { label: "YANG Zhengxin", href: "https://jason-young.me", external: true },
     ],
     links: [
-      {
-        label: "jason-young.me",
-        href: "https://jason-young.me",
-        external: true,
-      },
     ],
+    // fallbackLink: {
+    //   label: "YANG Zhengxin",
+    //   href: "https://jason-young.me",
+    //   external: true,
+    // },
   },
 ];

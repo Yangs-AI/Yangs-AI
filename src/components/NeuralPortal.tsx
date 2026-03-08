@@ -7,6 +7,8 @@ import { coreNode, portalNodes, type PortalNodeId } from "../data/portalNodes";
 type NodePositionMap = Record<PortalNodeId, { x: number; y: number }>;
 type Point = { x: number; y: number };
 
+const NODE_DRAG_THRESHOLD_PX = 5;
+
 function clamp01(value: number) {
   return Math.max(0, Math.min(1, value));
 }
@@ -151,6 +153,8 @@ export default function NeuralPortal() {
     nodeId: PortalNodeId;
     offsetX: number;
     offsetY: number;
+    startClientX: number;
+    startClientY: number;
     moved: boolean;
   } | null>(null);
 
@@ -200,7 +204,8 @@ export default function NeuralPortal() {
 
       const insideNeuron = target.closest("[data-neuron-root]");
       const insideCore = target.closest("[data-core-node]");
-      if (!insideNeuron && !insideCore) {
+      const insidePanel = target.closest("[data-info-panel]");
+      if (!insideNeuron && !insideCore && !insidePanel) {
         setActiveNodeId(null);
       }
     };
@@ -218,6 +223,11 @@ export default function NeuralPortal() {
       }
 
       const rect = container.getBoundingClientRect();
+      const dragDistance = Math.hypot(event.clientX - drag.startClientX, event.clientY - drag.startClientY);
+      if (dragDistance < NODE_DRAG_THRESHOLD_PX) {
+        return;
+      }
+
       const nextX = event.clientX - rect.left - drag.offsetX;
       const nextY = event.clientY - rect.top - drag.offsetY;
       const nextXPct = (nextX / rect.width) * 100;
@@ -280,6 +290,8 @@ export default function NeuralPortal() {
       nodeId,
       offsetX: event.clientX - rect.left - nodeX,
       offsetY: event.clientY - rect.top - nodeY,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
       moved: false,
     };
   };
@@ -288,6 +300,23 @@ export default function NeuralPortal() {
     if (dragStateRef.current?.nodeId === nodeId && dragStateRef.current.moved) {
       return;
     }
+
+    const targetNode = portalNodes.find((node) => node.id === nodeId);
+    if (targetNode && targetNode.subItems.length === 0 && targetNode.links.length === 0) {
+      const fallback = targetNode.fallbackLink;
+      if (!fallback?.href || fallback.draft) {
+        window.dispatchEvent(new CustomEvent("show-maintenance-notice"));
+        return;
+      }
+
+      if (fallback.external) {
+        window.open(fallback.href, "_blank", "noopener,noreferrer");
+      } else {
+        window.location.href = fallback.href;
+      }
+      return;
+    }
+
     setActiveNodeId((prev) => (prev === nodeId ? null : nodeId));
   };
 
@@ -305,21 +334,18 @@ export default function NeuralPortal() {
 
   const panelLinks = useMemo(() => {
     if (!infoNode) {
-      return [
-        { label: "Research", href: "#research", external: false },
-        { label: "Resources", href: "#resources", external: false },
-        { label: "Community", href: "#community", external: false },
-        { label: "Team", href: "#team", external: false },
-        { label: "Founder", href: "#founder", external: false },
-        { label: "datasets.yangs.ai", href: "https://datasets.yangs.ai", external: true },
-        { label: "benchmarks.yangs.ai", href: "https://benchmarks.yangs.ai", external: true },
-      ];
+      return [];
+    }
+
+    if (infoNode.subItems.length === 0 && infoNode.links.length === 0) {
+      return [];
     }
 
     return infoNode.links.map((link) => ({
       label: link.label,
       href: link.href,
       external: link.external,
+      draft: link.draft,
     }));
   }, [infoNode]);
 
@@ -532,7 +558,7 @@ export default function NeuralPortal() {
               ],
         }}
         transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut" }}
-        aria-label={coreNode.description}
+        aria-label={coreNode.shortDescription}
         role="button"
         tabIndex={0}
         data-core-node
@@ -572,30 +598,36 @@ export default function NeuralPortal() {
           exit={{ opacity: 0, y: 8 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
           className="absolute bottom-2 left-1/2 z-40 w-[min(90vw,24rem)] -translate-x-1/2 rounded-2xl border border-zinc-100/18 bg-[rgba(24,24,28,0.82)] p-3 backdrop-blur-md"
+          data-info-panel
         >
           <p className="mb-1 text-sm font-semibold tracking-wide text-zinc-100">
             {infoNode?.label ?? coreNode.label}
           </p>
           <p className="mb-2 text-xs leading-relaxed text-zinc-300/92">
-            {infoNode?.shortDescription ?? "YangsAI is the central neural gateway for research, resources, and people."}
+            {infoNode?.shortDescription ?? coreNode.shortDescription}
           </p>
-          <p className="mb-2 text-[0.68rem] tracking-wide text-zinc-300/78">
-            A focused set of curated links for deeper navigation.
-          </p>
-          <p className="mb-1 text-[0.65rem] uppercase tracking-[0.12em] text-zinc-300/64">Curated Deep Links</p>
-          <div className="flex flex-wrap gap-2">
-            {panelLinks.map((link) => (
-              <a
-                key={`${link.label}-${link.href}`}
-                href={link.href}
-                target={link.external ? "_blank" : undefined}
-                rel={link.external ? "noreferrer" : undefined}
-                className="rounded-xl border border-zinc-100/24 bg-white/8 px-3 py-1.5 text-xs text-zinc-100 hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-200/85"
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
+          {infoNode?.detailDescription && infoNode.detailDescription !== infoNode.shortDescription ? (
+            <p className="mb-2 text-xs leading-relaxed text-zinc-400/92">{infoNode.detailDescription}</p>
+          ) : null}
+          {panelLinks.length > 0 ? (
+            <>
+              <p className="mb-1 text-[0.65rem] uppercase tracking-[0.12em] text-zinc-300/64">Curated Links</p>
+              <div className="flex flex-wrap gap-2">
+                {panelLinks.map((link) => (
+                  <a
+                    key={`${link.label}-${link.href}`}
+                    href={link.href || "#"}
+                    target={link.external ? "_blank" : undefined}
+                    rel={link.external ? "noreferrer" : undefined}
+                    data-draft-link={link.draft || !link.href ? "true" : undefined}
+                    className="rounded-xl border border-zinc-100/24 bg-white/8 px-3 py-1.5 text-xs text-zinc-100 hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-200/85"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            </>
+          ) : null}
         </motion.aside>
       </AnimatePresence>
 

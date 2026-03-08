@@ -156,11 +156,12 @@ export default function PrimaryNode({
         const isSubDimmed = hoveredSubitemIndex !== null && hoveredSubitemIndex !== index;
         return (
           <motion.a
-            key={`${node.id}-${item}`}
+            key={`${node.id}-${item.label}-${item.href}`}
             href={item.href}
             target={item.external ? "_blank" : undefined}
             rel={item.external ? "noreferrer" : undefined}
-            className={`absolute left-1/2 top-1/2 z-[2] min-w-[5.8rem] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-zinc-100/24 bg-[radial-gradient(circle_at_38%_26%,rgba(239,243,250,0.14),rgba(21,22,28,0.9)_64%)] px-3 py-1.5 text-center text-[0.63rem] tracking-wide text-zinc-100/94 shadow-[0_8px_18px_rgba(6,8,14,0.42)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-200/85 ${expanded ? "pointer-events-auto" : "pointer-events-none"}`}
+            data-draft-link={item.draft ? "true" : undefined}
+            className={`absolute left-1/2 top-1/2 z-[2] min-w-[5.8rem] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-2xl border border-zinc-100/24 bg-[radial-gradient(circle_at_38%_26%,rgba(239,243,250,0.14),rgba(21,22,28,0.9)_64%)] px-3 py-1.5 text-center text-[0.63rem] tracking-wide text-zinc-100/94 shadow-[0_8px_18px_rgba(6,8,14,0.42)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-200/85 ${expanded ? "pointer-events-auto" : "pointer-events-none"}`}
             tabIndex={expanded ? 0 : -1}
             initial={false}
             animate={{
