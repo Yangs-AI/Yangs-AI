@@ -1,5 +1,6 @@
 ---
 import SubpageLayout from "../../../layouts/SubpageLayout.astro";
+import BackButton from "../../../components/BackButton.astro";
 
 type DirectionFrontmatter = {
   title?: string;
@@ -26,24 +27,26 @@ const directions = Object.entries(directionModules)
 ---
 
 <SubpageLayout title="Research Directions | Yangs AI" description="Long-term research directions for Yangs AI.">
-  <a href="/research" class="text-sm text-zinc-300 hover:text-zinc-100">← Back to Research</a>
+  <BackButton href="/research" label="Back to Research" />
+  <p class="font-tech mt-5 text-xs uppercase tracking-[0.12em] text-zinc-300">Research</p>
   <h1 class="mt-4 text-4xl font-semibold tracking-tight text-zinc-100 md:text-5xl">Directions</h1>
   <p class="mt-4 max-w-3xl text-base leading-relaxed text-zinc-300">
     Browse active and emerging direction tracks. Each direction has its own page with detailed markdown content.
   </p>
 
-  <section class="mt-8 grid gap-4 md:grid-cols-2">
+  <section class="mt-8 grid gap-4">
     {directions.map((direction) => (
       <a
         href={`/research/directions/${direction.slug}`}
-        class="rounded-xl border border-white/15 bg-white/5 p-5 hover:bg-white/10"
+        class="group rounded-2xl border border-white/15 bg-white/5 p-6 transition hover:border-white/30 hover:bg-white/10"
       >
         <p class="font-tech text-[0.66rem] uppercase tracking-[0.12em] text-zinc-300">Direction</p>
-        <h2 class="mt-2 text-xl font-medium text-zinc-100">{direction.title}</h2>
-        <p class="mt-2 text-sm leading-relaxed text-zinc-300">{direction.summary}</p>
-        {direction.updatedOn ? (
-          <p class="mt-3 text-xs text-zinc-400">Updated: {direction.updatedOn}</p>
-        ) : null}
+        <h2 class="mt-2 text-2xl font-medium text-zinc-100">{direction.title}</h2>
+        <p class="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-300">{direction.summary}</p>
+        <div class="mt-4 flex flex-wrap items-center gap-4 text-xs">
+          {direction.updatedOn ? <p class="text-zinc-400">Updated: {direction.updatedOn}</p> : <span class="text-zinc-500">Updated: TBD</span>}
+          <span class="font-tech uppercase tracking-[0.12em] text-zinc-200 transition group-hover:text-zinc-100">Visit Direction</span>
+        </div>
       </a>
     ))}
   </section>

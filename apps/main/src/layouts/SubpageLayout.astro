@@ -15,6 +15,17 @@ const { title, description } = Astro.props;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
+    <script is:inline>
+      (() => {
+        const key = "yangsai-theme";
+        const saved = window.localStorage.getItem(key);
+        const theme =
+          saved === "light" || saved === "dark"
+            ? saved
+            : "dark";
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
     <title>{title}</title>
     <meta name="description" content={description} />
   </head>

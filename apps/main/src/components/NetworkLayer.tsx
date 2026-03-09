@@ -9,6 +9,9 @@ interface NetworkLayerProps {
   activeId: string | null;
   hoveredSubitem: { nodeId: string; index: number } | null;
   isMobile: boolean;
+  lowPerformanceMode: boolean;
+  flowDotRxScale: number;
+  isLightTheme: boolean;
 }
 
 export default function NetworkLayer({
@@ -18,7 +21,10 @@ export default function NetworkLayer({
   hoveredId,
   activeId,
   hoveredSubitem,
-  isMobile: _isMobile,
+  isMobile,
+  lowPerformanceMode,
+  flowDotRxScale,
+  isLightTheme,
 }: NetworkLayerProps) {
   const reduceMotion = useReducedMotion();
   const core = corePosition;
@@ -32,9 +38,9 @@ export default function NetworkLayer({
     >
       <defs>
         <radialGradient id="flow-dot" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="rgba(255, 255, 255, 0.95)" />
-          <stop offset="35%" stopColor="rgba(221, 227, 236, 0.42)" />
-          <stop offset="100%" stopColor="rgba(221, 227, 236, 0)" />
+          <stop offset="0%" stopColor={isLightTheme ? "rgba(29, 78, 216, 0.86)" : "rgba(255, 255, 255, 0.95)"} />
+          <stop offset="35%" stopColor={isLightTheme ? "rgba(59, 130, 246, 0.34)" : "rgba(221, 227, 236, 0.42)"} />
+          <stop offset="100%" stopColor={isLightTheme ? "rgba(59, 130, 246, 0)" : "rgba(221, 227, 236, 0)"} />
         </radialGradient>
         <filter id="edge-soft-glow" x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation="0.35" result="blur" />
@@ -63,15 +69,17 @@ export default function NetworkLayer({
         });
 
         return (
-          <g key={node.id} filter="url(#edge-soft-glow)">
+          <g key={node.id}>
             {Array.from({ length: strandCount }).map((_, strandIndex) => {
               const side = strandIndex % 2 === 0 ? 1 : -1;
               const wave = (nodeIndex + 1) * (strandIndex + 1) * 0.9;
               const base = baseOffsets[strandIndex] * side;
               const drift = Math.sin(wave) * 3.8;
               const offset = base + drift;
-              const strandColor = `rgba(196, 204, 214, ${isHighlighted ? 0.9 : 0.52})`;
-              const strandHighlight = "rgba(236, 241, 248, 0.9)";
+              const strandColor = isLightTheme
+                ? `rgba(70, 110, 166, ${isHighlighted ? 0.92 : 0.64})`
+                : `rgba(196, 204, 214, ${isHighlighted ? 0.9 : 0.52})`;
+              const strandHighlight = isLightTheme ? "rgba(37, 99, 235, 0.96)" : "rgba(236, 241, 248, 0.9)";
               const isSubHighlighted = highlightedSubIndex === strandIndex;
               const isSubDimmed = highlightedSubIndex !== null && highlightedSubIndex !== strandIndex;
 
@@ -93,6 +101,35 @@ export default function NetworkLayer({
               const c2yAlt2 = core.y * 0.33 + pos.y * 0.67 - ny * (4 - offset * 0.6);
               const pathAlt2 = `M ${core.x} ${core.y} C ${c1xAlt2} ${c1yAlt2}, ${c2xAlt2} ${c2yAlt2}, ${pos.x} ${pos.y}`;
 
+              const canMorph = !reduceMotion && !isMobile && !lowPerformanceMode && isHighlighted;
+              const showFlowDot = !reduceMotion && !isMobile && !lowPerformanceMode && strandIndex % 2 === 0;
+              const pathAnimate = canMorph
+                ? {
+                    d: [pathD, pathAlt, pathAlt2, pathD],
+                    opacity: isSubHighlighted
+                      ? 1
+                      : isSubDimmed
+                        ? 0.15
+                        : isHighlighted
+                          ? 0.95
+                          : hasFocus
+                            ? 0.2
+                            : 0.52,
+                    strokeWidth: isSubHighlighted ? 0.56 : isHighlighted ? 0.34 : 0.18,
+                  }
+                : {
+                    opacity: isSubHighlighted
+                      ? 1
+                      : isSubDimmed
+                        ? 0.15
+                        : isHighlighted
+                          ? 0.95
+                          : hasFocus
+                            ? 0.2
+                            : 0.52,
+                    strokeWidth: isSubHighlighted ? 0.56 : isHighlighted ? 0.34 : 0.18,
+                  };
+
               return (
                 <g key={`${node.id}-${strandIndex}`}>
                   <motion.path
@@ -101,65 +138,33 @@ export default function NetworkLayer({
                     stroke={isHighlighted ? strandHighlight : strandColor}
                     strokeLinecap="round"
                     initial={false}
-                    animate={{
-                      d: reduceMotion ? pathD : [pathD, pathAlt, pathAlt2, pathD],
-                      opacity: isSubHighlighted
-                        ? 1
-                        : isSubDimmed
-                          ? 0.15
-                          : isHighlighted
-                            ? 0.95
-                            : hasFocus
-                              ? 0.2
-                              : 0.52,
-                      strokeWidth: isSubHighlighted ? 0.56 : isHighlighted ? 0.34 : 0.18,
-                    }}
+                    animate={pathAnimate}
                     transition={{
-                      d: {
-                        duration: 5.8 + strandIndex * 1.2,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      },
+                      ...(canMorph
+                        ? {
+                            d: {
+                              duration: 6.6 + strandIndex * 1.2,
+                              repeat: Infinity,
+                              ease: "easeInOut",
+                            },
+                          }
+                        : {}),
                       opacity: { duration: 0.35, ease: "easeOut" },
                       strokeWidth: { duration: 0.35, ease: "easeOut" },
                     }}
                   />
 
-                  <motion.path
-                    d={pathD}
-                    fill="none"
-                    stroke="rgba(211, 218, 228, 0.2)"
-                    strokeWidth={0.1}
-                    strokeDasharray="1.1 3.4"
-                    animate={{
-                      d: reduceMotion ? pathD : [pathD, pathAlt2, pathAlt, pathD],
-                      strokeDashoffset: reduceMotion ? 0 : [-12, 0],
-                      opacity: isSubHighlighted ? 0.9 : isSubDimmed ? 0.08 : 1,
-                    }}
-                    transition={{
-                      d: {
-                        duration: 5.2 + strandIndex,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      },
-                      strokeDashoffset: {
-                        duration: 7.5 + strandIndex * 1.4,
-                        repeat: Infinity,
-                        ease: "linear",
-                      },
-                    }}
-                  />
-
-                  {!reduceMotion ? (
-                    <circle r={0.62} fill="url(#flow-dot)">
+                  {showFlowDot ? (
+                    <ellipse rx={0.62 * flowDotRxScale} ry={0.62} fill="url(#flow-dot)" opacity={0.85}>
                       <animateMotion
-                        dur={`${6.2 + strandIndex * 0.8 + nodeIndex * 0.25}s`}
+                        dur={`${8.4 + strandIndex * 1 + nodeIndex * 0.35}s`}
                         repeatCount="indefinite"
                         rotate="auto"
                         path={pathD}
                       />
-                    </circle>
+                    </ellipse>
                   ) : null}
+
                 </g>
               );
             })}

@@ -4,8 +4,8 @@ dist/
 .astro/
 
 # generated brand assets (synced from packages/brand)
-apps/main/public/brand/*
-apps/benchmarks/public/brand/*
+apps/main/public/brand/
+apps/benchmarks/public/brand/
 
 # dependencies
 node_modules/

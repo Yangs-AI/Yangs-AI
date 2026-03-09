@@ -1,5 +1,6 @@
 ---
 import SubpageLayout from "../../../layouts/SubpageLayout.astro";
+import BackButton from "../../../components/BackButton.astro";
 
 type DirectionFrontmatter = {
   title?: string;
@@ -38,7 +39,7 @@ const Content = module.Content as (props: Record<string, never>) => unknown;
 ---
 
 <SubpageLayout title={`${title} | Directions | Yangs AI`} description={summary}>
-  <a href="/research/directions" class="text-sm text-zinc-300 hover:text-zinc-100">← Back to Directions</a>
+  <BackButton href="/research/directions" label="Back to Directions" />
 
   <p class="font-tech mt-5 text-xs uppercase tracking-[0.12em] text-zinc-300">Direction</p>
   <h1 class="mt-2 text-4xl font-semibold tracking-tight text-zinc-100 md:text-5xl">{title}</h1>
@@ -147,5 +148,65 @@ const Content = module.Content as (props: Record<string, never>) => unknown;
   :global(.direction-prose .callout.warn) {
     border-color: rgb(253 186 116 / 0.42);
     background: rgba(251, 146, 60, 0.12);
+  }
+
+  :global(html[data-theme="light"] .direction-prose) {
+    color: #1f2937;
+  }
+
+  :global(html[data-theme="light"] .direction-prose h2) {
+    color: #0f172a;
+  }
+
+  :global(html[data-theme="light"] .direction-prose h3) {
+    color: #1e293b;
+  }
+
+  :global(html[data-theme="light"] .direction-prose p),
+  :global(html[data-theme="light"] .direction-prose li) {
+    color: #334155;
+  }
+
+  :global(html[data-theme="light"] .direction-prose blockquote) {
+    border-left-color: rgb(71 85 105 / 0.62);
+    background: linear-gradient(90deg, rgba(148, 163, 184, 0.22), rgba(148, 163, 184, 0.08));
+    color: #334155;
+  }
+
+  :global(html[data-theme="light"] .direction-prose pre) {
+    border-color: rgb(15 23 42 / 0.14);
+    background: rgba(241, 245, 249, 0.92);
+    color: #0f172a;
+  }
+
+  :global(html[data-theme="light"] .direction-prose code:not(pre code)) {
+    border-color: rgb(15 23 42 / 0.16);
+    background: rgba(226, 232, 240, 0.72);
+    color: #0f172a;
+  }
+
+  :global(html[data-theme="light"] .direction-prose th),
+  :global(html[data-theme="light"] .direction-prose td) {
+    border-color: rgb(15 23 42 / 0.16);
+    color: #1f2937;
+  }
+
+  :global(html[data-theme="light"] .direction-prose th) {
+    background: rgba(203, 213, 225, 0.42);
+  }
+
+  :global(html[data-theme="light"] .direction-prose .callout) {
+    border-color: rgb(15 23 42 / 0.2);
+    background: rgba(226, 232, 240, 0.58);
+  }
+
+  :global(html[data-theme="light"] .direction-prose .callout.note) {
+    border-color: rgb(2 132 199 / 0.34);
+    background: rgba(186, 230, 253, 0.56);
+  }
+
+  :global(html[data-theme="light"] .direction-prose .callout.warn) {
+    border-color: rgb(217 119 6 / 0.34);
+    background: rgba(254, 215, 170, 0.56);
   }
 </style>

@@ -43,6 +43,23 @@ export const coreNode = {
 
 export const portalNodes: PortalNode[] = [
   {
+    id: "team",
+    label: "Team",
+    shortDescription: "Team introduction and member profiles.",
+    detailDescription:
+      "Get to know the YangsAI team through a concise introduction and member pages that present the people behind its research, resources, and academic activities.",
+    positionDesktop: { x: 86, y: 76 },
+    positionMobile: { x: 82, y: 76 },
+    subItems: [
+      { label: "About", href: "/team" },
+      { label: "Members", href: "/team/members" },
+    ],
+    links: [
+      { label: "YANG Yikang", href: "/team/members/yang-yikang" },
+      { label: "PENG Luzhou", href: "/team/members/peng-luzhou" },
+    ],
+  },
+  {
     id: "research",
     label: "Research",
     shortDescription: "Papers, projects, and long-term research directions.",
@@ -51,6 +68,7 @@ export const portalNodes: PortalNode[] = [
     positionDesktop: { x: 18, y: 21 },
     positionMobile: { x: 24, y: 16 },
     subItems: [
+      { label: "About", href: "/research" },
       { label: "Papers", href: "/research/papers" },
       { label: "Projects", href: "/research/projects" },
       { label: "Directions", href: "/research/directions" },
@@ -58,6 +76,25 @@ export const portalNodes: PortalNode[] = [
     links: [
       { label: "Selected Papers", href: "/research/papers/selected" },
       { label: "Selected Projects", href: "/research/projects/selected" },
+    ],
+  },
+  {
+    id: "community",
+    label: "Community",
+    shortDescription:
+      "Journals and organizational activities across the YangsAI ecosystem.",
+    detailDescription:
+      "Follow the scholarly and organizational side of YangsAI through hosted journals and the Yangs AI GitHub organization, where publications, code, and broader academic activities are brought together.",
+    positionDesktop: { x: 33, y: 46 },
+    positionMobile: { x: 21, y: 52 },
+    subItems: [
+      { label: "About", href: "/community" },
+      { label: "Journals", href: "/community/journals" , draft: true },
+      { label: "Organizations", href: "/community/organizations" , draft: true },
+    ],
+    links: [
+      { label: "Communications of the BenchCouncil", href: "/community/journals/cbench" , draft: true },
+      { label: "Yangs AI on GitHub", href: "https://github.com/yangs-ai", external: true },
     ],
   },
   {
@@ -81,7 +118,7 @@ export const portalNodes: PortalNode[] = [
       },
       {
         label: "Probing Memes",
-        href: "https://benchmarks.yangs.ai/probing-memes",
+        href: "https://probing-memes.benchmarks.yangs.ai",
         external: true,
       },
       {
@@ -89,41 +126,6 @@ export const portalNodes: PortalNode[] = [
         href: "https://fresh.research.jason-young.me",
         external: true,
       }
-    ],
-  },
-  {
-    id: "community",
-    label: "Community",
-    shortDescription:
-      "Journals and organizational activities across the YangsAI ecosystem.",
-    detailDescription:
-      "Follow the scholarly and organizational side of YangsAI through hosted journals and the Yangs AI GitHub organization, where publications, code, and broader academic activities are brought together.",
-    positionDesktop: { x: 33, y: 46 },
-    positionMobile: { x: 21, y: 52 },
-    subItems: [
-      { label: "Journals", href: "/community/journals" , draft: true },
-      { label: "Organizations", href: "/community/organizations" , draft: true },
-    ],
-    links: [
-      { label: "Communications of the BenchCouncil", href: "/community/journals/cbench" , draft: true },
-      { label: "Yangs AI on GitHub", href: "https://github.com/yangs-ai", external: true },
-    ],
-  },
-  {
-    id: "team",
-    label: "Team",
-    shortDescription: "Team introduction and member profiles.",
-    detailDescription:
-      "Get to know the YangsAI team through a concise introduction and member pages that present the people behind its research, resources, and academic activities.",
-    positionDesktop: { x: 86, y: 76 },
-    positionMobile: { x: 82, y: 76 },
-    subItems: [
-      { label: "About", href: "/team/about" },
-      { label: "Members", href: "/team/members" },
-    ],
-    links: [
-      { label: "YANG Yikang", href: "/team/members/yang-yikang" },
-      { label: "PENG Luzhou", href: "/team/members/peng-luzhou" },
     ],
   },
   {

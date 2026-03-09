@@ -1,0 +1,45 @@
+---
+import SubpageLayout from "../../layouts/SubpageLayout.astro";
+import BackButton from "../../components/BackButton.astro";
+---
+
+<SubpageLayout
+  title="Community | About | Yangs AI"
+  description="About the Yangs AI community space, including journals and organizations."
+>
+  <BackButton href="/" label="Back to Home" />
+  <p class="font-tech mt-5 text-xs uppercase tracking-[0.14em] text-zinc-300">Yangs AI</p>
+  <h1 class="mt-3 text-4xl font-semibold tracking-tight text-zinc-100 md:text-5xl">About Community</h1>
+  <p class="mt-4 max-w-3xl text-base leading-relaxed text-zinc-300">
+    Community pages collect the scholarly and organizational activities around Yangs AI, including journals,
+    ecosystem updates, and public-facing coordination channels.
+  </p>
+
+  <div class="mt-10 grid gap-4">
+    <a
+      class="rounded-2xl border border-white/15 bg-white/5 p-6 transition hover:border-white/30 hover:bg-white/10"
+      href="/community/journals"
+      data-draft-link="true"
+    >
+      <p class="font-tech text-xs uppercase tracking-[0.12em] text-zinc-300">Community</p>
+      <p class="mt-2 text-2xl font-medium text-zinc-100">Journals</p>
+      <p class="mt-2 max-w-3xl text-sm text-zinc-300">
+        Research publication channels, editorial initiatives, and journal-related updates.
+      </p>
+      <p class="font-tech mt-4 text-xs uppercase tracking-[0.12em] text-zinc-200">Visit Track</p>
+    </a>
+
+    <a
+      class="rounded-2xl border border-white/15 bg-white/5 p-6 transition hover:border-white/30 hover:bg-white/10"
+      href="/community/organizations"
+      data-draft-link="true"
+    >
+      <p class="font-tech text-xs uppercase tracking-[0.12em] text-zinc-300">Community</p>
+      <p class="mt-2 text-2xl font-medium text-zinc-100">Organizations</p>
+      <p class="mt-2 max-w-3xl text-sm text-zinc-300">
+        Organization-level activities, collaborations, and ecosystem participation around Yangs AI.
+      </p>
+      <p class="font-tech mt-4 text-xs uppercase tracking-[0.12em] text-zinc-200">Visit Track</p>
+    </a>
+  </div>
+</SubpageLayout>

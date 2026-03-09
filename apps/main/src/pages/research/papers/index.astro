@@ -1,11 +1,13 @@
 ---
 import PaperList from "../../../components/PaperList.astro";
+import BackButton from "../../../components/BackButton.astro";
 import { papers } from "../../../data/papers";
 import SubpageLayout from "../../../layouts/SubpageLayout.astro";
 ---
 
 <SubpageLayout title="Research Papers | Yangs AI" description="Paper list for Yangs AI research.">
-  <a href="/research" class="text-sm text-zinc-300 hover:text-zinc-100">← Back to Research</a>
+  <BackButton href="/research" label="Back to Research" />
+  <p class="font-tech mt-5 text-xs uppercase tracking-[0.12em] text-zinc-300">Research</p>
   <h1 class="mt-4 text-4xl font-semibold tracking-tight text-zinc-100 md:text-5xl">Papers</h1>
   <p class="mt-4 max-w-3xl text-base leading-relaxed text-zinc-300">
     Full paper index. For a curated entry point, open

@@ -19,7 +19,7 @@ function cubicAt(t: number, p0: number, p1: number, p2: number, p3: number) {
   return mt * mt * mt * p0 + 3 * mt * mt * t * p1 + 3 * mt * t * t * p2 + t * t * t * p3;
 }
 
-function sampleCubicBezier(p0: Point, p1: Point, p2: Point, p3: Point, steps = 12) {
+function sampleCubicBezier(p0: Point, p1: Point, p2: Point, p3: Point, steps = 8) {
   return Array.from({ length: steps + 1 }, (_, i) => {
     const t = i / steps;
     return {
@@ -59,7 +59,7 @@ function buildStrandSamplePoints(nodePositions: NodePositionMap, core: CorePosit
       const c2y = core.y * 0.33 + pos.y * 0.67 - ny * (6 - offset * 0.5);
 
       points.push(
-        ...sampleCubicBezier(core, { x: c1x, y: c1y }, { x: c2x, y: c2y }, { x: pos.x, y: pos.y }, 12),
+        ...sampleCubicBezier(core, { x: c1x, y: c1y }, { x: c2x, y: c2y }, { x: pos.x, y: pos.y }, 8),
       );
     });
   });
@@ -151,12 +151,16 @@ function useIsMobile(breakpoint = 768) {
 export default function NeuralPortal() {
   const reduceMotion = useReducedMotion();
   const isMobile = useIsMobile();
+  const [lowPerformanceMode, setLowPerformanceMode] = useState(false);
   const [hoveredNodeId, setHoveredNodeId] = useState<PortalNodeId | null>(null);
   const [activeNodeId, setActiveNodeId] = useState<PortalNodeId | null>(null);
   const [hoveredSubitem, setHoveredSubitem] = useState<{ nodeId: PortalNodeId; index: number } | null>(null);
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
   const sectionRef = useRef<HTMLElement | null>(null);
+  const networkViewportRef = useRef<HTMLDivElement | null>(null);
+  const [containerAspectRatio, setContainerAspectRatio] = useState(1);
   const [layoutReady, setLayoutReady] = useState(false);
+  const [isLightTheme, setIsLightTheme] = useState(false);
   const dragStateRef = useRef<{
     nodeId: PortalNodeId;
     offsetX: number;
@@ -175,6 +179,50 @@ export default function NeuralPortal() {
 
   const [nodePositions, setNodePositions] = useState<NodePositionMap>(() => getDefaultLayout(false));
   const [corePosition, setCorePosition] = useState<CorePosition>({ x: 50, y: 50 });
+
+  useEffect(() => {
+    const syncTheme = () => {
+      setIsLightTheme(document.documentElement.dataset.theme === "light");
+    };
+
+    syncTheme();
+    const observer = new MutationObserver(syncTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const viewport = networkViewportRef.current;
+    if (!viewport) {
+      return;
+    }
+
+    const updateAspect = () => {
+      const rect = viewport.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setContainerAspectRatio(rect.width / rect.height);
+      }
+    };
+
+    updateAspect();
+    const observer = new ResizeObserver(updateAspect);
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const nav = window.navigator as Navigator & {
+      deviceMemory?: number;
+      connection?: { saveData?: boolean };
+    };
+
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const saveData = Boolean(nav.connection?.saveData);
+    const lowCpu = (nav.hardwareConcurrency ?? 8) <= 4;
+    const lowMemory = (nav.deviceMemory ?? 8) <= 4;
+
+    setLowPerformanceMode(prefersReduced || saveData || lowCpu || lowMemory);
+  }, []);
 
   useEffect(() => {
     setLayoutReady(false);
@@ -451,7 +499,7 @@ export default function NeuralPortal() {
 
   const fireflies = useMemo(
     () =>
-      Array.from({ length: 46 }, (_, i) => {
+      Array.from({ length: lowPerformanceMode ? (isMobile ? 10 : 16) : isMobile ? 18 : 28 }, (_, i) => {
         const x = ((i * 31) % 100) + ((i % 4) - 1.5) * 1.25;
         const y = ((i * 23) % 100) + ((i % 5) - 2) * 1.15;
         const sizeRem = 0.14 + (i % 4) * 0.07;
@@ -462,15 +510,19 @@ export default function NeuralPortal() {
         const delay = (i % 7) * 0.24;
         return { x, y, sizeRem, alpha, driftX, driftY, duration, delay };
       }),
-    [],
+    [isMobile, lowPerformanceMode],
   );
 
   const strandSamplePoints = useMemo(
-    () => buildStrandSamplePoints(nodePositions, corePosition),
-    [nodePositions, corePosition],
+    () => (reduceMotion || lowPerformanceMode ? [] : buildStrandSamplePoints(nodePositions, corePosition)),
+    [nodePositions, corePosition, reduceMotion, lowPerformanceMode],
   );
 
   const firefliesWithAttraction = useMemo(() => {
+    if (reduceMotion || lowPerformanceMode) {
+      return fireflies.map((firefly) => ({ ...firefly, attraction: 0 }));
+    }
+
     const influenceRadius = isMobile ? 7.2 : 6.6;
 
     // Fireflies brighten near sampled neural strands to feel subtly "drawn" by the network.
@@ -489,14 +541,21 @@ export default function NeuralPortal() {
       const attraction = Math.pow(clamp01(1 - minDist / influenceRadius), 1.6);
       return { ...firefly, attraction };
     });
-  }, [fireflies, strandSamplePoints, isMobile]);
+  }, [fireflies, strandSamplePoints, isMobile, reduceMotion, lowPerformanceMode]);
+
+  const flowDotRxScale = useMemo(() => {
+    if (!Number.isFinite(containerAspectRatio) || containerAspectRatio <= 0) {
+      return 1;
+    }
+    return 1 / containerAspectRatio;
+  }, [containerAspectRatio]);
 
   // Expansion is click-driven to keep subitems open while users explore.
   const expandedNodeId = activeNodeId;
 
   // Convert pointer position into a tiny parallax vector for the whole network layer.
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (reduceMotion) {
+    if (reduceMotion || lowPerformanceMode) {
       return;
     }
 
@@ -511,7 +570,12 @@ export default function NeuralPortal() {
       <LayoutGroup id="yangs-portal-layout">
         <section
           ref={sectionRef}
-          className="relative h-full min-h-[26rem] overflow-hidden rounded-2xl border border-white/20 bg-[rgba(18,18,22,0.52)] shadow-[0_10px_40px_rgba(0,0,0,0.35)]"
+          data-neural-portal
+          className={`relative h-full min-h-[26rem] overflow-hidden rounded-2xl border shadow-[0_10px_40px_rgba(0,0,0,0.35)] ${
+            isLightTheme
+              ? "border-slate-700/20 bg-[rgba(247,251,255,0.82)] shadow-[0_16px_38px_rgba(94,120,152,0.22)]"
+              : "border-white/20 bg-[rgba(18,18,22,0.52)]"
+          }`}
           onPointerMove={handlePointerMove}
           onPointerLeave={() => {
             setPointer({ x: 0, y: 0 });
@@ -529,9 +593,9 @@ export default function NeuralPortal() {
         transition={{ type: "spring", stiffness: 60, damping: 20 }}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(250,252,255,0.12),transparent_60%)]" />
-        <div className="absolute left-[14%] top-[18%] h-56 w-56 rounded-full bg-white/14 blur-3xl" />
-        <div className="absolute right-[8%] top-[6%] h-72 w-72 rounded-full bg-zinc-200/12 blur-3xl" />
-        <div className="absolute bottom-[8%] left-[44%] h-56 w-56 rounded-full bg-zinc-300/10 blur-3xl" />
+        <div className={`absolute left-[14%] top-[18%] h-56 w-56 rounded-full blur-3xl ${isLightTheme ? "bg-sky-300/24" : "bg-white/14"}`} />
+        <div className={`absolute right-[8%] top-[6%] h-72 w-72 rounded-full blur-3xl ${isLightTheme ? "bg-blue-300/22" : "bg-zinc-200/12"}`} />
+        <div className={`absolute bottom-[8%] left-[44%] h-56 w-56 rounded-full blur-3xl ${isLightTheme ? "bg-slate-300/20" : "bg-zinc-300/10"}`} />
         <div className="pointer-events-none absolute inset-0" aria-hidden="true">
           {firefliesWithAttraction.map((firefly, index) => (
             <motion.span
@@ -575,7 +639,9 @@ export default function NeuralPortal() {
         </div>
       </motion.div>
 
-      <div className="absolute inset-x-0 top-0 bottom-24">
+      <div ref={networkViewportRef} className="absolute inset-x-0 top-0 bottom-24">
+      {layoutReady ? (
+        <>
       <NetworkLayer
         nodes={portalNodes}
         nodePositions={nodePositions}
@@ -584,6 +650,9 @@ export default function NeuralPortal() {
         activeId={activeNodeId}
         hoveredSubitem={hoveredSubitem}
         isMobile={isMobile}
+        lowPerformanceMode={lowPerformanceMode}
+        flowDotRxScale={flowDotRxScale}
+        isLightTheme={isLightTheme}
       />
 
       <div className="absolute inset-0 z-20">
@@ -626,7 +695,11 @@ export default function NeuralPortal() {
       </div>
 
       <motion.div
-        className="absolute z-20 flex h-20 w-24 -translate-x-1/2 -translate-y-1/2 cursor-grab items-center justify-center rounded-[58%_42%_49%_51%/48%_56%_44%_52%] border border-zinc-100/24 bg-[radial-gradient(circle_at_42%_36%,rgba(236,241,249,0.1),rgba(23,24,30,0.94)_64%)] text-center shadow-[0_8px_22px_rgba(4,6,12,0.54)] backdrop-blur-sm active:cursor-grabbing md:h-24 md:w-28"
+        className={`absolute z-20 flex h-20 w-24 -translate-x-1/2 -translate-y-1/2 cursor-grab items-center justify-center rounded-[58%_42%_49%_51%/48%_56%_44%_52%] border text-center backdrop-blur-sm active:cursor-grabbing md:h-24 md:w-28 ${
+          isLightTheme
+            ? "border-slate-700/24 bg-[radial-gradient(circle_at_42%_36%,rgba(248,252,255,0.96),rgba(203,217,236,0.88)_64%)] shadow-[0_10px_24px_rgba(101,128,164,0.24)]"
+            : "border-zinc-100/24 bg-[radial-gradient(circle_at_42%_36%,rgba(236,241,249,0.1),rgba(23,24,30,0.94)_64%)] shadow-[0_8px_22px_rgba(4,6,12,0.54)]"
+        }`}
         style={{ left: `${corePosition.x}%`, top: `${corePosition.y}%` }}
         onPointerDown={handleCorePointerDown}
         animate={{
@@ -661,10 +734,12 @@ export default function NeuralPortal() {
           }
         }}
       >
-        <span className="font-tech relative z-10 text-xs font-semibold tracking-[0.16em] text-zinc-100/88 md:text-sm">
+        <span className={`font-tech relative z-10 text-xs font-semibold tracking-[0.16em] md:text-sm ${isLightTheme ? "text-slate-800" : "text-zinc-100/88"}`}>
           {coreNode.label}
         </span>
       </motion.div>
+      </>
+      ) : null}
       </div>
 
       <AnimatePresence mode="wait">
@@ -674,21 +749,25 @@ export default function NeuralPortal() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 8 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
-          className="absolute bottom-2 left-1/2 z-40 w-[min(90vw,24rem)] -translate-x-1/2 rounded-2xl border border-zinc-100/18 bg-[rgba(24,24,28,0.82)] p-3 backdrop-blur-md"
+          className={`absolute bottom-2 left-1/2 z-40 w-[min(90vw,24rem)] -translate-x-1/2 rounded-2xl border p-3 backdrop-blur-md ${
+            isLightTheme
+              ? "border-slate-700/18 bg-[rgba(251,254,255,0.92)] shadow-[0_12px_26px_rgba(90,118,154,0.2)]"
+              : "border-zinc-100/18 bg-[rgba(24,24,28,0.82)]"
+          }`}
           data-info-panel
         >
-          <p className="mb-1 text-sm font-semibold tracking-wide text-zinc-100">
+          <p className={`mb-1 text-sm font-semibold tracking-wide ${isLightTheme ? "text-slate-900" : "text-zinc-100"}`} data-info-panel-title>
             {infoNode?.label ?? coreNode.label}
           </p>
-          <p className="mb-2 text-xs leading-relaxed text-zinc-300/92">
+          <p className={`mb-2 text-xs leading-relaxed ${isLightTheme ? "text-slate-700" : "text-zinc-300/92"}`}>
             {infoNode?.shortDescription ?? coreNode.shortDescription}
           </p>
           {infoNode?.detailDescription && infoNode.detailDescription !== infoNode.shortDescription ? (
-            <p className="mb-2 text-xs leading-relaxed text-zinc-400/92">{infoNode.detailDescription}</p>
+            <p className={`mb-2 text-xs leading-relaxed ${isLightTheme ? "text-slate-600" : "text-zinc-400/92"}`}>{infoNode.detailDescription}</p>
           ) : null}
           {panelLinks.length > 0 ? (
             <>
-              <p className="mb-1 text-[0.65rem] uppercase tracking-[0.12em] text-zinc-300/64">Curated Links</p>
+              <p className={`mb-1 text-[0.65rem] uppercase tracking-[0.12em] ${isLightTheme ? "text-slate-600" : "text-zinc-300/64"}`}>Curated Links</p>
               <div className="flex flex-wrap gap-2">
                 {panelLinks.map((link) => (
                   <a
@@ -697,7 +776,11 @@ export default function NeuralPortal() {
                     target={link.external ? "_blank" : undefined}
                     rel={link.external ? "noreferrer" : undefined}
                     data-draft-link={link.draft || !link.href ? "true" : undefined}
-                    className="rounded-xl border border-zinc-100/24 bg-white/8 px-3 py-1.5 text-xs text-zinc-100 hover:bg-white/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-200/85"
+                    className={`rounded-xl border px-3 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 ${
+                      isLightTheme
+                        ? "border-slate-700/24 bg-slate-100/80 text-slate-800 hover:bg-slate-200/80 focus-visible:ring-slate-700/60"
+                        : "border-zinc-100/24 bg-white/8 text-zinc-100 hover:bg-white/16 focus-visible:ring-zinc-200/85"
+                    }`}
                   >
                     {link.label}
                   </a>
@@ -710,7 +793,12 @@ export default function NeuralPortal() {
 
       <button
         type="button"
-        className="absolute bottom-2 right-2 z-50 cursor-pointer rounded-lg border border-zinc-100/24 bg-[rgba(20,20,24,0.88)] px-3 py-1.5 text-[0.68rem] uppercase tracking-[0.12em] text-zinc-200 hover:bg-zinc-100/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-200/85"
+        data-reset-layout
+        className={`absolute bottom-2 right-2 z-50 cursor-pointer rounded-lg border px-3 py-1.5 text-[0.68rem] uppercase tracking-[0.12em] focus-visible:outline-none focus-visible:ring-2 ${
+          isLightTheme
+            ? "border-slate-700/26 bg-white/90 text-slate-800 hover:bg-slate-100 focus-visible:ring-slate-700/58"
+            : "border-zinc-100/24 bg-[rgba(20,20,24,0.88)] text-zinc-200 hover:bg-zinc-100/12 focus-visible:ring-zinc-200/85"
+        }`}
         onClick={() => {
           setNodePositions(getDefaultLayout(isMobile));
           setCorePosition(getDefaultCorePosition(isMobile));

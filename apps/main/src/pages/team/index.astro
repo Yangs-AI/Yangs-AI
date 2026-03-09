@@ -1,3 +1,42 @@
 ---
-return Astro.redirect("/team/about");
+import SubpageLayout from "../../layouts/SubpageLayout.astro";
+import BackButton from "../../components/BackButton.astro";
 ---
+
+<SubpageLayout title="Team | About | Yangs AI" description="Introduction to the YangsAI team.">
+	<BackButton href="/" label="Back to Home" />
+	<p class="font-tech mt-5 text-xs uppercase tracking-[0.14em] text-zinc-300">Yangs AI</p>
+	<h1 class="mt-2 text-4xl font-semibold tracking-tight text-zinc-100 md:text-5xl">About Team</h1>
+	<p class="mt-4 max-w-3xl text-base leading-relaxed text-zinc-300">
+		The YangsAI team brings together researchers and engineers focused on foundational AI principles,
+		reproducible resources, and benchmark-centered evaluation.
+	</p>
+
+	<div class="mt-10 grid gap-4">
+		<a
+			href="/team/members"
+			class="rounded-2xl border border-white/15 bg-white/5 p-6 transition hover:border-white/30 hover:bg-white/10"
+		>
+			<p class="font-tech text-xs uppercase tracking-[0.12em] text-zinc-300">Team</p>
+			<p class="mt-2 text-2xl font-medium text-zinc-100">Members</p>
+			<p class="mt-2 max-w-3xl text-sm text-zinc-300">
+				Browse team profiles maintained as markdown pages for fast updates to bios, interests, and contributions.
+			</p>
+			<p class="font-tech mt-4 text-xs uppercase tracking-[0.12em] text-zinc-200">Visit Track</p>
+		</a>
+
+		<a
+			href="https://jason-young.me"
+			target="_blank"
+			rel="noreferrer"
+			class="rounded-2xl border border-white/15 bg-white/5 p-6 transition hover:border-white/30 hover:bg-white/10"
+		>
+			<p class="font-tech text-xs uppercase tracking-[0.12em] text-zinc-300">Team</p>
+			<p class="mt-2 text-2xl font-medium text-zinc-100">Founder</p>
+			<p class="mt-2 max-w-3xl text-sm text-zinc-300">
+				Learn more about the founder's academic background, publications, and current research activities.
+			</p>
+			<p class="font-tech mt-4 text-xs uppercase tracking-[0.12em] text-zinc-200">Visit Profile</p>
+		</a>
+	</div>
+</SubpageLayout>

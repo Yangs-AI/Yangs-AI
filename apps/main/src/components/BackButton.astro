@@ -1,0 +1,23 @@
+---
+interface Props {
+  href: string;
+  label: string;
+  external?: boolean;
+  class?: string;
+}
+
+const { href, label, external = false, class: className = "" } = Astro.props;
+---
+
+<a
+  href={href}
+  target={external ? "_blank" : undefined}
+  rel={external ? "noreferrer" : undefined}
+  data-back-button
+  class={`font-tech inline-flex items-center gap-2 rounded-full border border-sky-200/28 bg-sky-300/10 px-3 py-1.5 text-[0.66rem] uppercase tracking-[0.1em] leading-none text-sky-100 transition hover:bg-sky-300/18 hover:text-white ${className}`}
+>
+  <svg aria-hidden="true" viewBox="0 0 20 20" class="h-3.5 w-3.5 shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12.5 4.5L7 10L12.5 15.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <span class="pt-px">{label}</span>
+</a>

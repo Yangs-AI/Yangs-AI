@@ -7,7 +7,7 @@ memberType: "student"
 studentLevel: "master"
 graduated: false
 order: 2
-avatar: "/images/team/sample-peng-luzhou.svg"
+# avatar: "/images/team/sample-peng-luzhou.svg"
 email: "pengluzhou24s@ict.ac.cn"
 updatedOn: "2026-03-08"
 ---

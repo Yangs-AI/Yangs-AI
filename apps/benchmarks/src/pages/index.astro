@@ -1,175 +1,356 @@
 ---
+import "../styles/benchmarks-home.css";
+
+const startYear = 2026;
+const currentYear = new Date().getFullYear();
+const copyrightRange = currentYear > startYear ? `${startYear}-${currentYear}` : `${currentYear}`;
+
+type BenchmarkCard = {
+	title: string;
+	thumb: string;
+	image: string;
+	palette: [string, string];
+	description: string;
+	href: string;
+	status: "active" | "completed" | "upcoming";
+};
+
+type HeaderNavItem = {
+	label: string;
+	href: string;
+	emphasized?: boolean;
+};
+
+const headerNavItems: HeaderNavItem[] = [
+	{ label: "Team", href: "https://yangs.ai/team" },
+	{ label: "Research", href: "https://yangs.ai/research" },
+	{ label: "Community", href: "https://yangs.ai/community" },
+	{ label: "Back to Yangs AI", href: "https://yangs.ai", emphasized: true },
+];
+
+const benchmarkCards: BenchmarkCard[] = [
+	{
+		title: "Probing Memes",
+		thumb: "PM",
+		image: "/images/benchmarks/probing-memes-placeholder.svg",
+		palette: ["#77a6d8", "#3c5f85"],
+		description:
+			"Leaderboard and analysis platform for the Probing Memes paradigm, evaluating large language models through population-level probing.",
+		href: "https://probing-memes.benchmarks.yangs.ai",
+		status: "active",
+	},
+	{
+		title: "Younger Benchmark",
+		thumb: "YB",
+		image: "/images/benchmarks/younger-benchmark-placeholder.svg",
+		palette: ["#68b9ac", "#2f6f73"],
+		description:
+			"Younger Benchmark evaluates the capability of AI systems to understand and construct other AI systems, a foundational ability for Artificial Intelligence Designed Artificial Intelligence (AIDAI).",
+		href: "https://younger.benchmarks.yangs.ai",
+		status: "upcoming",
+	}
+];
+
+const benchmarkStatusMeta: Record<BenchmarkCard["status"], { short: string; detail: string }> = {
+	active: {
+		short: "Active · Ongoing maintenance",
+		detail: "Active · Maintained and continuously updated",
+	},
+	completed: {
+		short: "Completed · Archived benchmark",
+		detail: "Completed · Finalized and no longer actively maintained",
+	},
+	upcoming: {
+		short: "Upcoming · In development",
+		detail: "Upcoming · Under development and to be released",
+	},
+};
+
+const buildFallbackThumb = (title: string, shortLabel: string, palette: [string, string]) => {
+	const waveScale = Math.max(0.75, Math.min(1.25, shortLabel.charCodeAt(0) / 100));
+	const waveY = Math.round(520 + waveScale * 30);
+	const ringX = Math.round(840 - waveScale * 90);
+	const ringY = Math.round(230 + waveScale * 40);
+
+	const escapedTitle = title
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#39;");
+
+	const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 720' role='img' aria-label='${escapedTitle}'>
+  <defs>
+    <linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'>
+      <stop offset='0%' stop-color='${palette[0]}' stop-opacity='0.36'/>
+      <stop offset='100%' stop-color='${palette[1]}' stop-opacity='0.26'/>
+    </linearGradient>
+    <radialGradient id='halo' cx='18%' cy='10%' r='75%'>
+      <stop offset='0%' stop-color='#f3f8ff' stop-opacity='0.36'/>
+      <stop offset='100%' stop-color='#ffffff' stop-opacity='0'/>
+    </radialGradient>
+  </defs>
+  <rect width='1200' height='720' fill='#111925'/>
+  <rect width='1200' height='720' fill='url(#bg)'/>
+  <rect width='1200' height='720' fill='url(#halo)'/>
+	<g fill='none' stroke='#dce8f8' stroke-opacity='0.2'>
+		<path d='M 0 ${waveY} C 220 510, 420 640, 660 560 C 860 500, 1020 570, 1200 520' />
+		<path d='M 0 660 C 240 610, 430 690, 680 630 C 900 580, 1040 650, 1200 620' />
+		<circle cx='${ringX}' cy='${ringY}' r='128' stroke-width='1.4' stroke-opacity='0.26' />
+		<circle cx='${ringX}' cy='${ringY}' r='78' stroke-width='1.2' stroke-opacity='0.3' />
+  </g>
+	<g fill='none' stroke='${palette[0]}' stroke-opacity='0.35' stroke-width='1.4'>
+		<path d='M 112 208 H 396 V 452 H 112 Z' />
+		<path d='M 156 252 H 352 V 408 H 156 Z' />
+	</g>
+	<path d='M 974 140 L 1084 272 L 1012 360 L 902 228 Z' fill='${palette[0]}' fill-opacity='0.24'/>
+	<path d='M 934 242 L 1038 360 L 962 444 L 862 326 Z' fill='${palette[1]}' fill-opacity='0.2'/>
+</svg>`;
+
+	return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+};
+
+const benchmarkCardsWithThumb = benchmarkCards.map((card) => {
+	const fallbackThumb = buildFallbackThumb(card.title, card.thumb, card.palette);
+	return {
+		...card,
+		fallbackThumb,
+		thumbSrc: card.image || fallbackThumb,
+	};
+});
 ---
 
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
+		<script is:inline>
+			(() => {
+				const key = "yangsai-theme";
+				let theme = "dark";
+				try {
+					theme = localStorage.getItem(key) || "";
+				} catch {
+					theme = "";
+				}
+
+				if (theme !== "light" && theme !== "dark") {
+					theme = "dark";
+				}
+
+				document.documentElement.dataset.theme = theme;
+			})();
+		</script>
 		<link rel="icon" type="image/svg+xml" href="/brand/favicon.svg" />
 		<link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32x32.png" />
 		<link rel="icon" type="image/png" sizes="16x16" href="/brand/favicon-16x16.png" />
 		<link rel="icon" href="/brand/favicon.ico" sizes="any" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Benchmarks Portal | YangsAI</title>
+		<title>Benchmarks | YangsAI</title>
 		<meta
 			name="description"
-			content="Benchmarks portal for YangsAI. Track benchmark suites, evaluation status, reproducibility notes, and release updates."
+			content="Benchmark Hub of YangsAI. Access leaderboard results, benchmark suites, and upcoming evaluation programs."
 		/>
-		<style>
-			:root {
-				--bg-0: #0a0d10;
-				--bg-1: #11161c;
-				--line: #66727f;
-				--text: #e8edf3;
-				--muted: #b3bfcb;
-				--accent: #d5dde6;
-			}
-
-			* {
-				box-sizing: border-box;
-			}
-
-			body {
-				margin: 0;
-				min-height: 100vh;
-				font-family: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
-				color: var(--text);
-				background:
-					radial-gradient(1200px 560px at -8% -6%, rgba(220, 232, 246, 0.14), transparent 52%),
-					radial-gradient(900px 460px at 108% 0%, rgba(154, 173, 194, 0.12), transparent 56%),
-					linear-gradient(160deg, var(--bg-0), var(--bg-1));
-			}
-
-			.frame {
-				margin: 0 auto;
-				max-width: 980px;
-				padding: 3.2rem 1.1rem 2rem;
-			}
-
-			.hero {
-				border: 1px solid rgba(213, 221, 230, 0.22);
-				border-radius: 1.2rem;
-				padding: 1.3rem;
-				background: linear-gradient(180deg, rgba(20, 26, 33, 0.72), rgba(15, 20, 25, 0.72));
-				box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
-			}
-
-			.badge {
-				display: inline-block;
-				font-size: 0.69rem;
-				letter-spacing: 0.14em;
-				text-transform: uppercase;
-				color: var(--muted);
-			}
-
-			h1 {
-				margin: 0.6rem 0 0;
-				font-size: clamp(2rem, 6vw, 3.6rem);
-				line-height: 0.96;
-				letter-spacing: -0.02em;
-			}
-
-			.lead {
-				margin: 0.95rem 0 0;
-				max-width: 64ch;
-				color: var(--muted);
-				line-height: 1.65;
-			}
-
-			.grid {
-				margin-top: 1.2rem;
-				display: grid;
-				grid-template-columns: repeat(3, minmax(0, 1fr));
-				gap: 0.7rem;
-			}
-
-			.card {
-				border: 1px solid rgba(213, 221, 230, 0.18);
-				border-radius: 0.9rem;
-				padding: 0.9rem;
-				background: rgba(17, 21, 27, 0.58);
-			}
-
-			.card h2 {
-				margin: 0;
-				font-size: 0.92rem;
-				letter-spacing: 0.08em;
-				text-transform: uppercase;
-				color: var(--accent);
-			}
-
-			.card p {
-				margin: 0.45rem 0 0;
-				font-size: 0.92rem;
-				color: var(--muted);
-			}
-
-			.actions {
-				margin-top: 1rem;
-				display: flex;
-				flex-wrap: wrap;
-				gap: 0.55rem;
-			}
-
-			.btn {
-				display: inline-block;
-				border-radius: 999px;
-				border: 1px solid rgba(213, 221, 230, 0.28);
-				padding: 0.46rem 0.9rem;
-				color: var(--text);
-				text-decoration: none;
-				font-size: 0.82rem;
-			}
-
-			.btn:hover {
-				background: rgba(213, 221, 230, 0.12);
-			}
-
-			footer {
-				margin-top: 1rem;
-				font-size: 0.77rem;
-				color: #9aa7b5;
-			}
-
-			@media (max-width: 780px) {
-				.grid {
-					grid-template-columns: 1fr;
-				}
-			}
-		</style>
 	</head>
 	<body>
-		<main class="frame">
-			<section class="hero">
-				<span class="badge">benchmarks.yangs.ai</span>
-				<h1>Benchmark Portal</h1>
-				<p class="lead">
-					Single-page entry point for YangsAI benchmark programs. This portal is designed for rapid updates,
-					reproducibility reporting, and transparent release tracking.
-				</p>
+		<header class="page-header">
+			<div class="header-inner">
+				<a href="https://yangs.ai" aria-label="Go to Yangs AI homepage" class="brand-link">
+					<img src="/brand/favicon-32x32.png" alt="YangsAI logo" class="brand-icon" />
+					<img src="/brand/yangs-ai-wordmark.svg" alt="Yangs AI" class="brand-wordmark" />
+				</a>
+				<nav class="header-nav" aria-label="Yangs AI links">
+					{headerNavItems.map((item) => (
+						<a class={`nav-link font-tech${item.emphasized ? " nav-link-main" : ""}`} href={item.href}>
+							{item.label}
+						</a>
+					))}
+					<button
+						type="button"
+						class="theme-toggle nav-link font-tech"
+						data-theme-toggle
+						aria-label="Switch theme"
+					>
+						<span class="theme-toggle-icon" aria-hidden="true">
+							<svg data-theme-icon-sun viewBox="0 0 35 35" class="hidden" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path fill="currentColor" d="M17.5,25.88a8.38,8.38,0,1,1,8.38-8.38A8.389,8.389,0,0,1,17.5,25.88Zm0-14.26a5.88,5.88,0,1,0,5.88,5.88A5.887,5.887,0,0,0,17.5,11.62Z"/>
+								<path fill="currentColor" d="M17.5,5.471h-.034A1.251,1.251,0,0,1,16.25,4.187l.075-2.721A1.267,1.267,0,0,1,17.609.25a1.251,1.251,0,0,1,1.215,1.284l-.075,2.721A1.249,1.249,0,0,1,17.5,5.471Z"/>
+								<path fill="currentColor" d="M26.893,9.364a1.25,1.25,0,0,1-.859-2.158l1.978-1.871A1.25,1.25,0,0,1,29.73,7.151L27.752,9.022A1.242,1.242,0,0,1,26.893,9.364Z"/>
+								<path fill="currentColor" d="M33.5,18.837h-.036l-2.722-.077a1.249,1.249,0,0,1-1.213-1.284,1.211,1.211,0,0,1,1.285-1.214l2.721.077a1.25,1.25,0,0,1-.035,2.5Z"/>
+								<path fill="currentColor" d="M28.748,30.13a1.248,1.248,0,0,1-.909-.392L25.97,27.759a1.25,1.25,0,1,1,1.817-1.717l1.869,1.98a1.249,1.249,0,0,1-.908,2.108Z"/>
+								<path fill="currentColor" d="M17.4,34.75h-.037a1.249,1.249,0,0,1-1.213-1.285l.079-2.721a1.25,1.25,0,0,1,2.5.072l-.079,2.721A1.249,1.249,0,0,1,17.4,34.75Z"/>
+								<path fill="currentColor" d="M6.112,29.989a1.249,1.249,0,0,1-.857-2.159l1.98-1.867A1.25,1.25,0,1,1,8.95,27.781L6.969,29.648A1.242,1.242,0,0,1,6.112,29.989Z"/>
+								<path fill="currentColor" d="M4.221,18.72H4.184l-2.721-.081A1.25,1.25,0,0,1,.251,17.352,1.237,1.237,0,0,1,1.537,16.14l2.721.081a1.25,1.25,0,0,1-.037,2.5Z"/>
+								<path fill="currentColor" d="M8.135,9.335a1.248,1.248,0,0,1-.91-.393L5.359,6.961a1.25,1.25,0,1,1,1.82-1.715L9.046,7.228a1.251,1.251,0,0,1-.911,2.107Z"/>
+							</svg>
+							<svg data-theme-icon-moon viewBox="0 0 35 35" class="hidden" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path fill="currentColor" d="M18.44,34.68a18.22,18.22,0,0,1-2.94-.24,18.18,18.18,0,0,1-15-20.86A18.06,18.06,0,0,1,9.59.63,2.42,2.42,0,0,1,12.2.79a2.39,2.39,0,0,1,1,2.41L11.9,3.1l1.23.22A15.66,15.66,0,0,0,23.34,21h0a15.82,15.82,0,0,0,8.47.53A2.44,2.44,0,0,1,34.47,25,18.18,18.18,0,0,1,18.44,34.68ZM10.67,2.89a15.67,15.67,0,0,0-5,22.77A15.66,15.66,0,0,0,32.18,24a18.49,18.49,0,0,1-9.65-.64A18.18,18.18,0,0,1,10.67,2.89Z"/>
+							</svg>
+						</span>
+						<span class="theme-toggle-label sr-only" data-theme-toggle-label>Toggle theme</span>
+					</button>
+				</nav>
+			</div>
+		</header>
 
-				<div class="grid">
-					<article class="card">
-						<h2>Suites</h2>
-						<p>Catalog benchmark suites by modality, data source, and task family.</p>
-					</article>
-					<article class="card">
-						<h2>Status</h2>
-						<p>Publish current run status, known issues, and pending validation checks.</p>
-					</article>
-					<article class="card">
-						<h2>Releases</h2>
-						<p>Track changelogs, version tags, and migration notes for benchmark users.</p>
-					</article>
+		<div class="page-shell">
+			<main class="main-wrap">
+				<section class="hero">
+					<span class="badge">benchmarks.yangs.ai</span>
+					<h1>YangsAI Benchmark Hub</h1>
+					<p class="lead">
+						Central entry point for evaluation programs developed within YangsAI. Explore benchmark leaderboards,
+						datasets, and public evaluation protocols.
+					</p>
+
+					<div class="cards">
+						{benchmarkCardsWithThumb.map((card) => (
+							<a
+								class="card"
+								href={card.href}
+								target={card.status === "upcoming" ? undefined : "_blank"}
+								rel={card.status === "upcoming" ? undefined : "noreferrer"}
+								aria-label={`Open ${card.title}`}
+								data-benchmark-status={card.status}
+							>
+								<span class="card-thumb" aria-hidden="true">
+									<img
+										src={card.thumbSrc}
+										alt=""
+										loading="lazy"
+										decoding="async"
+										data-fallback-src={card.fallbackThumb}
+									/>
+								</span>
+								<div class="card-body">
+									<h2 class="font-tech card-title">{card.title}</h2>
+									<span
+										class={`card-status card-status-${card.status} font-tech`}
+										data-status-description={benchmarkStatusMeta[card.status].detail}
+									>
+										{benchmarkStatusMeta[card.status].short}
+									</span>
+									<p class="card-description">{card.description}</p>
+									<p class="card-cta">{card.status === "upcoming" ? "Under Development" : "Visit Track"}</p>
+								</div>
+							</a>
+						))}
+					</div>
+				</section>
+			</main>
+
+			<footer class="page-footer">
+				<div class="footer-inner">
+					<p>Copyright © {copyrightRange} YangsAI. All Rights Reserved.</p>
+					<p>Yangs AI - dedicated to discovering the fundamental principles of artificial intelligence.</p>
 				</div>
+			</footer>
+		</div>
 
-				<div class="actions">
-					<a class="btn" href="https://yangs.ai" target="_blank" rel="noreferrer">Visit Main Site</a>
-					<a class="btn" href="mailto:contact@yangs.ai">Contact Team</a>
-				</div>
-			</section>
+		<div id="upcoming-overlay" class="upcoming-overlay" aria-hidden="true">
+			<div class="upcoming-dialog" role="alertdialog" aria-modal="true" aria-labelledby="upcoming-title" aria-describedby="upcoming-desc">
+				<p id="upcoming-title" class="upcoming-title font-tech">Upcoming</p>
+				<p id="upcoming-desc" class="upcoming-desc">This benchmark is under development and not available yet.</p>
+				<button type="button" class="upcoming-close font-tech" data-upcoming-close>Got it</button>
+			</div>
+		</div>
 
-			<footer>YangsAI Benchmarks Portal • Built with Astro</footer>
-		</main>
+		<script>
+			const THEME_KEY = "yangsai-theme";
+			type ThemeMode = "light" | "dark";
+			const themeToggle = document.querySelector("[data-theme-toggle]");
+			const themeLabel = document.querySelector("[data-theme-toggle-label]");
+			const upcomingOverlay = document.getElementById("upcoming-overlay");
+
+			const getTheme = (): ThemeMode => document.documentElement.dataset.theme === "light" ? "light" : "dark";
+
+			const applyTheme = (nextTheme: ThemeMode, persist: boolean = true) => {
+				document.documentElement.dataset.theme = nextTheme;
+				if (themeLabel) {
+					themeLabel.textContent = nextTheme === "dark" ? "Switch to light theme" : "Switch to dark theme";
+				}
+
+				if (themeToggle instanceof HTMLElement) {
+					const nextLabel = nextTheme === "dark" ? "Switch to light theme" : "Switch to dark theme";
+					themeToggle.setAttribute("aria-label", nextLabel);
+					themeToggle.setAttribute("title", nextLabel);
+				}
+
+				document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+					const sun = button.querySelector("[data-theme-icon-sun]");
+					const moon = button.querySelector("[data-theme-icon-moon]");
+
+					if (sun instanceof SVGElement) {
+						sun.classList.toggle("hidden", nextTheme !== "light");
+					}
+					if (moon instanceof SVGElement) {
+						moon.classList.toggle("hidden", nextTheme !== "dark");
+					}
+				});
+
+				if (persist) {
+					try {
+						localStorage.setItem(THEME_KEY, nextTheme);
+					} catch {
+						// Ignore storage errors in private browsing or restricted contexts.
+					}
+				}
+			};
+
+			if (themeToggle) {
+				applyTheme(getTheme(), false);
+				themeToggle.addEventListener("click", () => {
+					const nextTheme = getTheme() === "light" ? "dark" : "light";
+					applyTheme(nextTheme);
+				});
+			}
+
+			const showUpcomingNotice = () => {
+				if (!(upcomingOverlay instanceof HTMLElement)) return;
+				upcomingOverlay.classList.add("is-visible");
+				upcomingOverlay.setAttribute("aria-hidden", "false");
+			};
+
+			const hideUpcomingNotice = () => {
+				if (!(upcomingOverlay instanceof HTMLElement)) return;
+				upcomingOverlay.classList.remove("is-visible");
+				upcomingOverlay.setAttribute("aria-hidden", "true");
+			};
+
+			document.addEventListener("click", (event) => {
+				const target = event.target;
+				if (!(target instanceof Element)) return;
+
+				const upcomingCard = target.closest('[data-benchmark-status="upcoming"]');
+				if (upcomingCard) {
+					event.preventDefault();
+					showUpcomingNotice();
+					return;
+				}
+
+				if (target.closest("[data-upcoming-close]")) {
+					hideUpcomingNotice();
+					return;
+				}
+
+				if (target.id === "upcoming-overlay") {
+					hideUpcomingNotice();
+				}
+			});
+
+			document.addEventListener("keydown", (event) => {
+				if (event.key === "Escape") {
+					hideUpcomingNotice();
+				}
+			});
+
+			document.querySelectorAll(".card-thumb img").forEach((img) => {
+				img.addEventListener("error", () => {
+					const fallback = img.getAttribute("data-fallback-src");
+					if (!fallback || img.getAttribute("src") === fallback) return;
+					img.setAttribute("src", fallback);
+				});
+			});
+		</script>
 	</body>
 </html>

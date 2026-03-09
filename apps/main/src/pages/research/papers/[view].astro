@@ -1,5 +1,6 @@
 ---
 import PaperList from "../../../components/PaperList.astro";
+import BackButton from "../../../components/BackButton.astro";
 import { papers } from "../../../data/papers";
 import SubpageLayout from "../../../layouts/SubpageLayout.astro";
 
@@ -17,7 +18,7 @@ const selectedPapers = papers.filter((paper) => paper.selected);
 ---
 
 <SubpageLayout title="Selected Papers | Yangs AI" description="Curated selected papers from Yangs AI research.">
-  <a href="/research/papers" class="text-sm text-zinc-300 hover:text-zinc-100">← All Papers</a>
+  <BackButton href="/research/papers" label="All Papers" />
   <p class="font-tech mt-5 text-xs uppercase tracking-[0.14em] text-zinc-300">Curated</p>
   <h1 class="mt-2 text-4xl font-semibold tracking-tight text-zinc-100 md:text-5xl">Selected Papers</h1>
   <p class="mt-4 max-w-3xl text-base leading-relaxed text-zinc-300">

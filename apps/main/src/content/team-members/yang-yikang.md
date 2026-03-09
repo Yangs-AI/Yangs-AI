@@ -7,7 +7,7 @@ memberType: "student"
 studentLevel: "phd"
 graduated: false
 order: 1
-avatar: "/images/team/sample-yang-yikang.svg"
+# avatar: "/images/team/sample-yang-yikang.svg"
 email: "yangyikang23s@ict.ac.cn"
 updatedOn: "2026-03-08"
 ---

@@ -9,6 +9,17 @@ import SiteFooter from "../components/SiteFooter.astro";
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
+		<script is:inline>
+			(() => {
+				const key = "yangsai-theme";
+				const saved = window.localStorage.getItem(key);
+				const theme =
+					saved === "light" || saved === "dark"
+						? saved
+						: "dark";
+				document.documentElement.dataset.theme = theme;
+			})();
+		</script>
 		<link rel="icon" type="image/svg+xml" href="/brand/favicon.svg" />
 		<link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32x32.png" />
 		<link rel="icon" type="image/png" sizes="16x16" href="/brand/favicon-16x16.png" />
