@@ -1058,7 +1058,7 @@ export default function NeuralPortal() {
                       type="button"
                       disabled={!previousNewsItem}
                       onClick={() => setActiveNewsId(previousNewsItem?.id ?? null)}
-                      className={`rounded-lg border px-2.5 py-1 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                      className={`cursor-pointer rounded-lg border px-2.5 py-1 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                         isLightTheme
                           ? "border-slate-700/24 bg-slate-100/90 text-slate-800 hover:bg-slate-200/80"
                           : "border-zinc-100/24 bg-white/8 text-zinc-100 hover:bg-white/14"
@@ -1070,7 +1070,7 @@ export default function NeuralPortal() {
                       type="button"
                       disabled={!nextNewsItem}
                       onClick={() => setActiveNewsId(nextNewsItem?.id ?? null)}
-                      className={`rounded-lg border px-2.5 py-1 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                      className={`cursor-pointer rounded-lg border px-2.5 py-1 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                         isLightTheme
                           ? "border-slate-700/24 bg-slate-100/90 text-slate-800 hover:bg-slate-200/80"
                           : "border-zinc-100/24 bg-white/8 text-zinc-100 hover:bg-white/14"
@@ -1081,7 +1081,7 @@ export default function NeuralPortal() {
                     <button
                       type="button"
                       onClick={() => setActiveNewsId(null)}
-                      className={`rounded-md border px-2 py-1 text-xs ${
+                      className={`cursor-pointer rounded-md border px-2 py-1 text-xs ${
                         isLightTheme
                           ? "border-slate-700/24 bg-slate-100/90 text-slate-800 hover:bg-slate-200/80"
                           : "border-zinc-100/24 bg-white/8 text-zinc-100 hover:bg-white/14"
