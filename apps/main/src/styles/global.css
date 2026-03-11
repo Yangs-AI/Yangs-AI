@@ -359,6 +359,27 @@ html[data-theme="light"] [data-member-content] .callout {
 	background: rgba(224, 242, 254, 0.56) !important;
 }
 
+html[data-theme="light"] [data-member-content] .pub-link-btn {
+	border-color: rgba(37, 99, 235, 0.42) !important;
+	background: rgba(59, 130, 246, 0.14) !important;
+	color: #1d4ed8 !important;
+}
+
+html[data-theme="light"] [data-member-content] .pub-link-btn:hover {
+	background: rgba(59, 130, 246, 0.22) !important;
+	color: #1e3a8a !important;
+}
+
+html[data-theme="light"] [data-member-content] .author-self {
+	background: rgba(16, 185, 129, 0.14) !important;
+	color: #0f766e !important;
+}
+
+html[data-theme="light"] [data-member-content] .author-corresponding {
+	background: rgba(167, 139, 250, 0.16) !important;
+	color: #6d28d9 !important;
+}
+
 html[data-theme="light"] [data-author-badge="first"] {
 	border-color: rgba(162, 28, 175, 0.34) !important;
 	background: rgba(217, 70, 239, 0.18) !important;
@@ -377,6 +398,16 @@ html[data-theme="light"] [data-author-badge="corr"] {
 
 html[data-theme="light"] [data-author-badge="corr"] .bg-sky-200 {
 	background-color: #0369a1 !important;
+}
+
+html[data-theme="light"] .author-link {
+	color: #1e3a8a !important;
+	text-decoration-color: rgba(30, 58, 138, 0.45) !important;
+}
+
+html[data-theme="light"] .author-link:hover {
+	background: rgba(59, 130, 246, 0.14) !important;
+	color: #1e40af !important;
 }
 
 html[data-theme="light"] [data-project-status="active"] {

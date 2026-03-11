@@ -1,5 +1,22 @@
 import { defineCollection, z } from "astro:content";
 
+const extraPublicationAuthor = z.object({
+  name: z.string(),
+  url: z.string().url().optional(),
+  isFirstAuthor: z.boolean().optional(),
+  isCorrespondingAuthor: z.boolean().optional(),
+});
+
+const extraPublication = z.object({
+  title: z.string(),
+  venue: z.string().optional(),
+  publishedOn: z.string().optional(),
+  authors: z.array(extraPublicationAuthor).min(1),
+  paperUrl: z.string().url().optional(),
+  codeUrl: z.string().url().optional(),
+  bibtex: z.string().optional(),
+});
+
 const directions = defineCollection({
   schema: z.object({
     title: z.string(),
@@ -17,6 +34,7 @@ const teamMembers = defineCollection({
       role: z.string(),
       affiliation: z.string(),
       summary: z.string(),
+      extraPublications: z.array(extraPublication).optional(),
       order: z.number().optional(),
       avatar: z.string().optional(),
       email: z.string().optional(),
@@ -29,6 +47,7 @@ const teamMembers = defineCollection({
       role: z.string(),
       affiliation: z.string(),
       summary: z.string(),
+      extraPublications: z.array(extraPublication).optional(),
       studentLevel: z.enum(["undergraduate", "master", "phd"]),
       graduated: z.boolean(),
       graduationYear: z.number().optional(),

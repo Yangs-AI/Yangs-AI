@@ -1,16 +1,53 @@
 ---
+import { getCollection } from "astro:content";
+import { authorLinks } from "../data/papers";
 import type { PaperEntry } from "../data/papers";
 
 interface Props {
   papers: PaperEntry[];
   emptyMessage?: string;
+  disableAuthorLinkForName?: string;
 }
 
-const { papers, emptyMessage = "No papers yet." } = Astro.props;
+const { papers, emptyMessage = "No papers yet.", disableAuthorLinkForName } = Astro.props;
 
 const sortedPapers = [...papers].sort(
   (a, b) => new Date(b.publishedOn).getTime() - new Date(a.publishedOn).getTime(),
 );
+
+const normalizeName = (name: string) => name.replace(/\*/g, "").trim().toLowerCase().replace(/\s+/g, " ");
+const disabledAuthorName = disableAuthorLinkForName ? normalizeName(disableAuthorLinkForName) : null;
+
+const teamMembers = await getCollection("team-members");
+const memberLinkByName = new Map(
+  teamMembers.map((entry) => [normalizeName(entry.data.name), `/team/members/${entry.id.replace(/\.md$/, "")}`]),
+);
+
+const globalAuthorLinkByName = new Map(
+  Object.entries(authorLinks).map(([name, url]) => [normalizeName(name), url]),
+);
+
+const resolveAuthorLink = (author: { name: string; url?: string }) => {
+  if (disabledAuthorName && normalizeName(author.name) === disabledAuthorName) {
+    return null;
+  }
+
+  if (author.url) {
+    return { href: author.url, external: /^https?:\/\//i.test(author.url) };
+  }
+
+  const globalAuthorHref = globalAuthorLinkByName.get(normalizeName(author.name));
+  if (globalAuthorHref) {
+    return { href: globalAuthorHref, external: /^https?:\/\//i.test(globalAuthorHref) };
+  }
+
+  const memberHref = memberLinkByName.get(normalizeName(author.name));
+  if (!memberHref) {
+    return null;
+  }
+
+  return { href: memberHref, external: false };
+};
 
 const formatDate = (value: string) =>
   new Date(`${value}T00:00:00`).toLocaleDateString("en-US", {
@@ -35,26 +72,60 @@ const formatDate = (value: string) =>
           <time datetime={paper.publishedOn}>{formatDate(paper.publishedOn)}</time>
         </p>
         <div class="mt-2 flex flex-wrap items-center gap-2 text-sm leading-relaxed text-zinc-300">
-          {paper.authors.map((author, authorIndex) => (
+          {paper.authors.map((author, authorIndex) => {
+            const authorLink = resolveAuthorLink(author);
+            const isCurrentMember = disabledAuthorName && normalizeName(author.name) === disabledAuthorName;
+            const hasRole = author.isFirstAuthor || author.isCorrespondingAuthor;
+            const shouldUseChip = Boolean(hasRole || isCurrentMember);
+            const chipClass = [
+              "author-chip",
+              isCurrentMember ? "author-chip--self" : "",
+              authorLink ? "author-chip--link" : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+
+            return (
             <span class="inline-flex items-center gap-1.5">
-              <span>{author.name}</span>
-              {author.isFirstAuthor ? (
-                <span data-author-badge="first" class="inline-flex items-center gap-1 rounded-full border border-fuchsia-300/38 bg-fuchsia-300/18 px-1.5 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-fuchsia-50">
-                  <span class="h-1.5 w-1.5 rounded-full bg-fuchsia-200" aria-hidden="true"></span>
-                  First
-                </span>
-              ) : null}
-              {author.isCorrespondingAuthor ? (
-                <span data-author-badge="corr" class="inline-flex items-center gap-1 rounded-full border border-sky-300/40 bg-sky-300/18 px-1.5 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-sky-50">
-                  <span class="h-1.5 w-1.5 rounded-full bg-sky-200" aria-hidden="true"></span>
-                  Corr.
-                </span>
-              ) : null}
+              {shouldUseChip ? (
+                authorLink ? (
+                  <a
+                    href={authorLink.href}
+                    target={authorLink.external ? "_blank" : undefined}
+                    rel={authorLink.external ? "noreferrer" : undefined}
+                    class={chipClass}
+                  >
+                    <span class={isCurrentMember ? "author-chip-name author-chip-name--self" : "author-chip-name"}>{author.name}</span>
+                    {author.isFirstAuthor ? <span class="author-chip-label author-chip-label--first">First</span> : null}
+                    {author.isCorrespondingAuthor ? <span class="author-chip-label author-chip-label--corr">Corr.</span> : null}
+                    {isCurrentMember ? <span class="author-chip-label author-chip-label--me">Me</span> : null}
+                  </a>
+                ) : (
+                  <span class={chipClass}>
+                    <span class={isCurrentMember ? "author-chip-name author-chip-name--self" : "author-chip-name"}>{author.name}</span>
+                    {author.isFirstAuthor ? <span class="author-chip-label author-chip-label--first">First</span> : null}
+                    {author.isCorrespondingAuthor ? <span class="author-chip-label author-chip-label--corr">Corr.</span> : null}
+                    {isCurrentMember ? <span class="author-chip-label author-chip-label--me">Me</span> : null}
+                  </span>
+                )
+              ) : authorLink ? (
+                <a
+                  href={authorLink.href}
+                  target={authorLink.external ? "_blank" : undefined}
+                  rel={authorLink.external ? "noreferrer" : undefined}
+                  class="author-link text-zinc-100 underline decoration-zinc-500/75 underline-offset-2 transition-colors hover:text-white"
+                >
+                  {author.name}
+                </a>
+              ) : (
+                <span>{author.name}</span>
+              )}
               {authorIndex < paper.authors.length - 1 ? (
                 <span class="px-0.5 text-zinc-500/80" aria-hidden="true">•</span>
               ) : null}
             </span>
-          ))}
+            );
+          })}
         </div>
 
         <div class="mt-4 flex flex-wrap gap-2">
@@ -133,6 +204,107 @@ const formatDate = (value: string) =>
 </section>
 
 <style>
+  .author-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.12rem;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    background: rgba(61, 81, 119, 0.22);
+    color: #e5e7eb;
+    border-radius: 0.62rem;
+    padding: 0.18rem 0.62rem;
+    text-decoration: none;
+  }
+
+  .author-chip--link {
+    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+  }
+
+  .author-chip--link:hover {
+    background: rgba(82, 109, 160, 0.32);
+    border-color: rgba(191, 219, 254, 0.38);
+    color: #ffffff;
+  }
+
+  .author-chip--self {
+    border-color: rgba(110, 231, 183, 0.34);
+    background: rgba(110, 231, 183, 0.1);
+  }
+
+  .author-chip-name {
+    line-height: 1.2;
+  }
+
+  .author-chip-name--self {
+    font-weight: 600;
+  }
+
+  .author-chip-label {
+    border-radius: 999px;
+    padding: 0.02rem 0.24rem;
+    font-size: 0.54rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .author-chip-name + .author-chip-label {
+    margin-left: 0.08rem;
+  }
+
+  .author-chip-label + .author-chip-label {
+    margin-left: -0.04rem;
+  }
+
+  .author-chip-label--first {
+    background: rgba(217, 70, 239, 0.2);
+    color: #fae8ff;
+  }
+
+  .author-chip-label--corr {
+    background: rgba(139, 92, 246, 0.22);
+    color: #ede9fe;
+  }
+
+  .author-chip-label--me {
+    background: rgba(16, 185, 129, 0.2);
+    color: #a7f3d0;
+  }
+
+  :global(html[data-theme="light"] .author-chip) {
+    border-color: rgba(71, 85, 105, 0.24);
+    background: rgba(224, 235, 252, 0.72);
+    color: #1e293b;
+  }
+
+  :global(html[data-theme="light"] .author-chip--link:hover) {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(37, 99, 235, 0.36);
+    color: #1e3a8a;
+  }
+
+  :global(html[data-theme="light"] .author-chip--self) {
+    border-color: rgba(15, 118, 110, 0.34);
+    background: rgba(20, 184, 166, 0.12);
+    color: #0f766e;
+  }
+
+  :global(html[data-theme="light"] .author-chip-label--first) {
+    background: rgba(217, 70, 239, 0.16);
+    color: #86198f;
+  }
+
+  :global(html[data-theme="light"] .author-chip-label--corr) {
+    background: rgba(139, 92, 246, 0.18);
+    color: #6d28d9;
+  }
+
+  :global(html[data-theme="light"] .author-chip-label--me) {
+    background: rgba(20, 184, 166, 0.16);
+    color: #0f766e;
+  }
+
   :global(.bibtex-dialog) {
     opacity: 0;
     transform: translateY(12px) scale(0.98);

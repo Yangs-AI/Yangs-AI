@@ -2,6 +2,9 @@
 import { getCollection } from "astro:content";
 import SubpageLayout from "../../../layouts/SubpageLayout.astro";
 import BackButton from "../../../components/BackButton.astro";
+import PaperList from "../../../components/PaperList.astro";
+import { papers } from "../../../data/papers";
+import type { PaperEntry, PaperAuthor } from "../../../data/papers";
 
 type StudentLevel = "undergraduate" | "master" | "phd";
 
@@ -33,6 +36,15 @@ type MemberData = {
   studentLevel?: StudentLevel;
   graduated?: boolean;
   graduationYear?: number;
+  extraPublications?: Array<{
+    title: string;
+    venue?: string;
+    publishedOn?: string;
+    authors: PaperAuthor[];
+    paperUrl?: string;
+    codeUrl?: string;
+    bibtex?: string;
+  }>;
 };
 
 export async function getStaticPaths() {
@@ -67,6 +79,22 @@ const memberType = (data as MemberData).memberType;
 const studentLevel = (data as MemberData).studentLevel;
 const graduated = memberType === "student" ? (data as MemberData).graduated ?? false : false;
 const graduationYear = memberType === "student" ? (data as MemberData).graduationYear : undefined;
+
+const normalizeName = (value: string) => value.replace(/\*/g, "").trim().toLowerCase().replace(/\s+/g, " ");
+const memberPapers = papers.filter((paper) => paper.authors.some((author) => normalizeName(author.name) === normalizeName(name)));
+const extraPublications = (data as MemberData).extraPublications ?? [];
+const extraMemberPapers: PaperEntry[] = extraPublications.map((paper, index) => ({
+  id: `extra-${slug}-${index + 1}`,
+  title: paper.title,
+  venue: paper.venue ?? "Member Update",
+  publishedOn: paper.publishedOn ?? updatedOn ?? "1970-01-01",
+  authors: paper.authors,
+  paperUrl: paper.paperUrl,
+  codeUrl: paper.codeUrl,
+  bibtex: paper.bibtex,
+}));
+const knownTitles = new Set(memberPapers.map((paper) => paper.title.trim().toLowerCase()));
+const memberPaperFeed = [...memberPapers, ...extraMemberPapers.filter((paper) => !knownTitles.has(paper.title.trim().toLowerCase()))];
 
 const buildFallbackAvatar = (displayName: string, type: "employee" | "student") => {
   const escapedName = displayName
@@ -212,9 +240,32 @@ const avatarSrc = avatar || fallbackAvatar;
     {updatedOn ? <span class="text-xs text-zinc-400">Updated: {updatedOn}</span> : null}
   </div>
 
-  <article data-member-content class="mt-7 rounded-xl border border-white/12 bg-white/5 px-6 py-7 text-zinc-200 md:px-8 md:py-8 [&_h2]:mt-8 [&_h2]:border-b [&_h2]:border-white/12 [&_h2]:pb-2 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:text-zinc-100 [&_h3]:mt-6 [&_h3]:text-lg [&_h3]:font-medium [&_h3]:text-zinc-100 [&_p]:mt-3 [&_p]:leading-relaxed [&_a]:text-sky-200 [&_a]:underline [&_a]:underline-offset-4 [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-5 [&_ol]:mt-3 [&_ol]:list-decimal [&_ol]:space-y-1.5 [&_ol]:pl-5 [&_blockquote]:mt-4 [&_blockquote]:rounded-lg [&_blockquote]:border-l-4 [&_blockquote]:border-sky-300/42 [&_blockquote]:bg-sky-300/8 [&_blockquote]:px-4 [&_blockquote]:py-2 [&_.callout]:mt-4 [&_.callout]:rounded-lg [&_.callout]:border [&_.callout]:border-white/16 [&_.callout]:bg-white/7 [&_.callout]:px-4 [&_.callout]:py-3 [&_.callout.note]:border-sky-300/38 [&_.callout.note]:bg-sky-300/12 [&_h2+ol]:mt-4 [&_h2+ol]:list-none [&_h2+ol]:space-y-3 [&_h2+ol]:pl-0 [&_h2+ol_li]:rounded-xl [&_h2+ol_li]:border [&_h2+ol_li]:border-white/14 [&_h2+ol_li]:bg-white/4 [&_h2+ol_li]:px-4 [&_h2+ol_li]:py-3 [&_h2+ol_li]:shadow-[0_8px_22px_rgba(0,0,0,0.12)] [&_h2+ol_li_p]:my-0 [&_h2+ol_li_p+p]:mt-1.5 [&_h2+ol_li_p:first-of-type]:text-zinc-100 [&_h2+ol_li_p:first-of-type]:font-semibold [&_h2+ol_li_p:first-of-type]:leading-snug [&_h2+ol_li_p:nth-of-type(2)]:text-zinc-200 [&_h2+ol_li_p:nth-of-type(3)]:text-sky-200 [&_h2+ol_li_p:nth-of-type(3)]:font-medium [&_h2+ol_li_p>strong]:font-inherit">
+  <article data-member-content class="mt-7 text-zinc-200 [&_h2]:mt-8 [&_h2]:border-b [&_h2]:border-white/12 [&_h2]:pb-2 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:text-zinc-100 [&_h3]:mt-6 [&_h3]:text-lg [&_h3]:font-medium [&_h3]:text-zinc-100 [&_p]:mt-3 [&_p]:leading-relaxed [&_a]:text-sky-200 [&_a]:underline [&_a]:underline-offset-4 [&_.pub-link-btn]:inline-flex [&_.pub-link-btn]:items-center [&_.pub-link-btn]:rounded-lg [&_.pub-link-btn]:border [&_.pub-link-btn]:border-sky-200/35 [&_.pub-link-btn]:bg-sky-300/10 [&_.pub-link-btn]:px-3 [&_.pub-link-btn]:py-1.5 [&_.pub-link-btn]:text-xs [&_.pub-link-btn]:font-semibold [&_.pub-link-btn]:tracking-wide [&_.pub-link-btn]:text-sky-100 [&_.pub-link-btn]:break-all [&_.pub-link-btn]:no-underline [&_.pub-link-btn]:transition-colors [&_.pub-link-btn:hover]:bg-sky-300/20 [&_.pub-link-btn:hover]:text-white [&_.author-self]:rounded [&_.author-self]:bg-emerald-200/12 [&_.author-self]:px-1.5 [&_.author-self]:py-0.5 [&_.author-self]:font-semibold [&_.author-self]:text-emerald-200 [&_.author-corresponding]:rounded [&_.author-corresponding]:bg-violet-200/12 [&_.author-corresponding]:px-1.5 [&_.author-corresponding]:py-0.5 [&_.author-corresponding]:font-semibold [&_.author-corresponding]:text-violet-200 [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-5 [&_ol]:mt-3 [&_ol]:list-decimal [&_ol]:space-y-1.5 [&_ol]:pl-5 [&_blockquote]:mt-4 [&_blockquote]:rounded-lg [&_blockquote]:border-l-4 [&_blockquote]:border-sky-300/42 [&_blockquote]:bg-sky-300/8 [&_blockquote]:px-4 [&_blockquote]:py-2 [&_.callout]:mt-4 [&_.callout]:rounded-lg [&_.callout]:border [&_.callout]:border-white/16 [&_.callout]:bg-white/7 [&_.callout]:px-4 [&_.callout]:py-3 [&_.callout.note]:border-sky-300/38 [&_.callout.note]:bg-sky-300/12 [&_h2+ol]:mt-4 [&_h2+ol]:list-none [&_h2+ol]:space-y-3 [&_h2+ol]:pl-0 [&_h2+ol_li]:rounded-xl [&_h2+ol_li]:border [&_h2+ol_li]:border-white/14 [&_h2+ol_li]:bg-white/4 [&_h2+ol_li]:px-4 [&_h2+ol_li]:py-3 [&_h2+ol_li]:shadow-[0_8px_22px_rgba(0,0,0,0.12)] [&_h2+ol_li_p]:my-0 [&_h2+ol_li_p+p]:mt-1.5 [&_h2+ol_li_p:first-of-type]:text-zinc-100 [&_h2+ol_li_p:first-of-type]:font-semibold [&_h2+ol_li_p:first-of-type]:leading-snug [&_h2+ol_li_p:nth-of-type(2)]:text-zinc-200 [&_h2+ol_li_p:nth-of-type(3)]:text-sky-200 [&_h2+ol_li_p:nth-of-type(3)]:font-medium [&_h2+ol_li_p>strong]:font-inherit">
     <Content />
   </article>
+
+  <section class="mt-8">
+    <div class="flex flex-wrap items-center gap-3">
+      <h2 class="text-2xl font-semibold text-zinc-100">Publications</h2>
+      <a
+        href="/research/papers"
+        class="rounded-md border border-zinc-100/24 bg-white/8 px-2.5 py-1 text-xs font-medium text-zinc-100 hover:bg-white/16"
+      >
+        View All Papers
+      </a>
+      <a
+        href="/research/papers/selected"
+        class="rounded-md border border-zinc-100/24 bg-white/8 px-2.5 py-1 text-xs font-medium text-zinc-100 hover:bg-white/16"
+      >
+        Selected Papers
+      </a>
+    </div>
+    <PaperList
+      papers={memberPaperFeed}
+      emptyMessage={`No publications found for ${name} in src/data/papers.ts or extraPublications.`}
+      disableAuthorLinkForName={name}
+    />
+  </section>
 
   <script>
     document.querySelectorAll("img[data-fallback-src]").forEach((img) => {
@@ -224,5 +275,52 @@ const avatarSrc = avatar || fallbackAvatar;
         img.setAttribute("src", fallback);
       });
     });
+
+    // Turn each markdown H2 section into "heading + content card" blocks.
+    const contentRoot = document.querySelector("[data-member-content]");
+    if (contentRoot instanceof HTMLElement) {
+      const children = Array.from(contentRoot.children);
+      let currentCard: HTMLDivElement | null = null;
+
+      children.forEach((node) => {
+        if (node.tagName === "H2") {
+          currentCard = document.createElement("div");
+          currentCard.className = "member-section-card";
+          node.insertAdjacentElement("afterend", currentCard);
+          return;
+        }
+
+        if (currentCard) {
+          currentCard.appendChild(node);
+        }
+      });
+    }
   </script>
+
+  <style>
+    :global([data-member-content] h2) {
+      margin-top: 2rem;
+      margin-bottom: 0.8rem;
+      border: none;
+      padding-bottom: 0;
+    }
+
+    :global([data-member-content] .member-section-card) {
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 0.9rem;
+      padding: 1rem 1rem;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+    }
+
+    :global([data-member-content] .member-section-card > :first-child) {
+      margin-top: 0;
+    }
+
+    :global(html[data-theme="light"] [data-member-content] .member-section-card) {
+      border-color: rgba(23, 33, 47, 0.14);
+      background: rgba(248, 251, 255, 0.8);
+      box-shadow: 0 8px 22px rgba(100, 124, 156, 0.14);
+    }
+  </style>
 </SubpageLayout>

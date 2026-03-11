@@ -6,6 +6,35 @@ summary: "Works on model evaluation and design."
 memberType: "student"
 studentLevel: "master"
 graduated: false
+extraPublications:
+  - title: "AGIBench: A Multi-granularity, Multimodal, Human-Referenced, Auto-Scoring Benchmark for Large Language Models"
+    venue: "Bench 2023"
+    publishedOn: "2024-02-14"
+    authors:
+      - name: "Fei Tang"
+        isFirstAuthor: true
+      - name: "Wanling Gao"
+      - name: "Luzhou Peng"
+      - name: "Jianfeng Zhan"
+        isCorrespondingAuthor: true
+    paperUrl: "https://doi.org/10.1007/978-981-97-0316-6_9"
+    bibtex: |-
+      @InProceedings{10.1007/978-981-97-0316-6_9,
+      author="Tang, Fei
+      and Gao, Wanling
+      and Peng, LuZhou
+      and Zhan, Jianfeng",
+      editor="Hunold, Sascha
+      and Xie, Biwei
+      and Shu, Kai",
+      title="AGIBench: A Multi-granularity, Multimodal, Human-Referenced, Auto-Scoring Benchmark for Large Language Models",
+      booktitle="Benchmarking, Measuring, and Optimizing",
+      year="2024",
+      publisher="Springer Nature Singapore",
+      address="Singapore",
+      pages="137--152",
+      isbn="978-981-97-0316-6"
+      }
 order: 2
 # avatar: "/images/team/sample-peng-luzhou.svg"
 email: "pengluzhou24s@ict.ac.cn"
@@ -22,26 +51,4 @@ He has also been involved in work such as model architecture design and dataset 
 
 - LLM Evaluation
 - Dataset and benchmark construction
-
-## Publications
-
-1.
-	<p><strong>Probing Memes in LLMs: A Paradigm for the Entangled Evaluation World</strong></p>
-	<p>Luzhou Peng, Zhengxin Yang*, Honglu Ji, Yikang Yang, Fanda Fan, Wanling Gao, Jiayuan Ge, Yilin Han, Jianfeng Zhan.</p>
-	<p>https://arxiv.org/abs/2603.04408</p>
-
-2.
-	<p><strong>GraDE: A Graph Diffusion Estimator for Frequent Subgraph Discovery in Neural Architectures</strong></p>
-	<p>Yikang Yang, Zhengxin Yang*, Minghao Luo, Luzhou Peng, Hongxiao Li, Wanling Gao, Lei Wang, Jianfeng Zhan.</p>
-	<p>https://arxiv.org/abs/2602.03257</p>
-
-3.
-    <p><strong>Younger: The First Dataset for Artificial Intelligence-Generated Neural Network Architecture</strong></p>
-    <p>Zhengxin Yang, Wanling Gao, Luzhou Peng, Yunyou Huang, Fei Tang, Jianfeng Zhan*.</p>
-    <p>https://arxiv.org/abs/2406.15132</p>
-
-4. 
-    <p><strong>AGIBench: A Multi-granularity, Multimodal, Human-Referenced, Auto-Scoring Benchmark for Large Language Models</strong></p>
-    <p>Fei Tang, Wanling Gao, Luzhou Peng, Jianfeng Zhan*.</p>
-    <p>https://doi.org/10.1007/978-981-97-0316-6_9</p>
 

@@ -6,6 +6,34 @@ summary: "Focuses on AIDAI and graph diffusion models."
 memberType: "student"
 studentLevel: "phd"
 graduated: false
+extraPublications:
+  - title: "A Linear Combination-Based Method to Construct Proxy Benchmarks for Big Data Workloads"
+    venue: "Bench 2023"
+    publishedOn: "2024-02-14"
+    authors:
+      - name: "Yikang Yang"
+        isFirstAuthor: true
+      - name: "Lei Wang"
+        isCorrespondingAuthor: true
+      - name: "Jianfeng Zhan"
+    paperUrl: "https://doi.org/10.1007/978-981-97-0316-6_8"
+    bibtex: |-
+      @inproceedings{10.1007/978-981-97-0316-6_8,
+      author = {Yang, Yikang and Wang, Lei and Zhan, Jianfeng},
+      title = {A Linear Combination-Based Method to&nbsp;Construct Proxy Benchmarks for&nbsp;Big Data Workloads},
+      year = {2023},
+      isbn = {978-981-97-0315-9},
+      publisher = {Springer-Verlag},
+      address = {Berlin, Heidelberg},
+      url = {https://doi.org/10.1007/978-981-97-0316-6_8},
+      doi = {10.1007/978-981-97-0316-6_8},
+      booktitle = {Benchmarking, Measuring, and Optimizing: 15th BenchCouncil International Symposium, Bench 2023, Sanya, China, December 3–5, 2023, Revised Selected Papers},
+      pages = {120–136},
+      numpages = {17},
+      keywords = {Micro-architectural metrics, Proxy benchmark, Linear combination},
+      location = {Sanya, China}
+      }
+	
 order: 1
 # avatar: "/images/team/sample-yang-yikang.svg"
 email: "yangyikang23s@ict.ac.cn"
@@ -23,20 +51,3 @@ I also work on graph generation, with a focus on graph diffusion models that gen
 
 - Artificial Intelligence Designed Artificial Intelligence
 - Graph Diffusion Models
-
-## Publications
-
-1.
-	<p><strong>GraDE: A Graph Diffusion Estimator for Frequent Subgraph Discovery in Neural Architectures</strong></p>
-	<p>Yikang Yang, Zhengxin Yang*, Minghao Luo, Luzhou Peng, Hongxiao Li, Wanling Gao, Lei Wang, Jianfeng Zhan.</p>
-	<p>arXiv:2602.03257</p>
-
-2.
-	<p><strong>Probing Memes in LLMs: A Paradigm for the Entangled Evaluation World</strong></p>
-	<p>Luzhou Peng, Zhengxin Yang*, Honglu Ji, Yikang Yang, Fanda Fan, Wanling Gao, Jiayuan Ge, Yilin Han, Jianfeng Zhan.</p>
-	<p>arXiv:2603.04408</p>
-
-3.
-	<p><strong>A Linear Combination-Based Method to Construct Proxy Benchmarks for Big Data Workloads</strong></p>
-	<p>Yikang Yang, Lei Wang*, Jianfeng Zhan.</p>
-	<p>Bench 2023</p>

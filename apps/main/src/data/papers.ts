@@ -1,8 +1,18 @@
 export interface PaperAuthor {
   name: string;
+  // Optional per-paper explicit profile/homepage link.
+  // Priority: author.url > authorLinks[name] > member auto-link.
+  url?: string;
   isFirstAuthor?: boolean;
   isCorrespondingAuthor?: boolean;
 }
+
+// Optional global author links. Configure once by author name instead of repeating in each paper.
+// The key matching is case-insensitive and whitespace-insensitive in rendering.
+export const authorLinks: Record<string, string> = {
+  "Zhengxin Yang": "https://jason-young.me/",
+  "Jianfeng Zhan": "https://www.zhanjianfeng.org/",
+};
 
 export interface PaperEntry {
   id: string;
