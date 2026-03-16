@@ -194,9 +194,7 @@ const normalizeFilterValue = (value: string) => value.trim().toLowerCase().repla
             >
               BibTeX
             </button>
-          ) : (
-            <span class="rounded-lg border border-zinc-100/12 bg-white/4 px-3 py-1.5 text-xs text-zinc-400">BibTeX N/A</span>
-          )}
+          ) : null}
 
           {paper.paperUrl ? (
             <a
@@ -220,9 +218,7 @@ const normalizeFilterValue = (value: string) => value.trim().toLowerCase().repla
             >
               Code
             </a>
-          ) : (
-            <span class="rounded-lg border border-zinc-100/12 bg-white/4 px-3 py-1.5 text-xs text-zinc-400">Code N/A</span>
-          )}
+          ) : null}
         </div>
 
         {paper.bibtex ? (
