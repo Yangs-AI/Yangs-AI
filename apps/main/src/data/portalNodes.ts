@@ -59,8 +59,8 @@ export const portalNodes: PortalNode[] = [
       { label: "Members", href: "/team/members" },
     ],
     links: [
-      { label: "YANG Yikang", href: "/team/members/yang-yikang" },
-      { label: "PENG Luzhou", href: "/team/members/peng-luzhou" },
+      { label: "YANG Yikang", href: "/team/members/student/00-yang-yikang" },
+      { label: "PENG Luzhou", href: "/team/members/student/01-peng-luzhou" },
     ],
   },
   {

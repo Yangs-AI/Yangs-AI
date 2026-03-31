@@ -17,6 +17,36 @@ const extraPublication = z.object({
   bibtex: z.string().optional(),
 });
 
+const memberPeriod = z.object({
+  start: z.string(),
+  end: z.string().optional(),
+});
+
+const memberDestination = z.object({
+  status: z.string(),
+  organization: z.string().optional(),
+  role: z.string().optional(),
+  location: z.string().optional(),
+  url: z.string().url().optional(),
+  updatedOn: z.string(),
+  note: z.string().optional(),
+});
+
+const memberCommonFields = {
+  name: z.string(),
+  role: z.string(),
+  summary: z.string(),
+  periodAtLab: memberPeriod,
+  extraPublications: z.array(extraPublication).optional(),
+  publicationView: z.enum(["all", "selected"]).optional(),
+  publicationLimit: z.number().int().positive().optional(),
+  order: z.number().optional(),
+  avatar: z.string().optional(),
+  email: z.string().optional(),
+  website: z.string().url().optional(),
+  updatedOn: z.string().optional(),
+};
+
 const directions = defineCollection({
   schema: z.object({
     title: z.string(),
@@ -30,36 +60,31 @@ const teamMembers = defineCollection({
   schema: z.discriminatedUnion("memberType", [
     z.object({
       memberType: z.literal("employee"),
-      name: z.string(),
-      role: z.string(),
-      affiliation: z.string(),
-      summary: z.string(),
-      extraPublications: z.array(extraPublication).optional(),
-      publicationView: z.enum(["all", "selected"]).optional(),
-      publicationLimit: z.number().int().positive().optional(),
-      order: z.number().optional(),
-      avatar: z.string().optional(),
-      email: z.string().optional(),
-      website: z.string().url().optional(),
-      updatedOn: z.string().optional(),
+      ...memberCommonFields,
     }),
     z.object({
       memberType: z.literal("student"),
-      name: z.string(),
-      role: z.string(),
-      affiliation: z.string(),
-      summary: z.string(),
-      extraPublications: z.array(extraPublication).optional(),
-      publicationView: z.enum(["all", "selected"]).optional(),
-      publicationLimit: z.number().int().positive().optional(),
+      ...memberCommonFields,
+      studentStatus: z.enum(["current", "graduated"]),
       studentLevel: z.enum(["undergraduate", "master", "phd"]),
-      graduated: z.boolean(),
       graduationYear: z.number().optional(),
-      order: z.number().optional(),
-      avatar: z.string().optional(),
-      email: z.string().optional(),
-      website: z.string().url().optional(),
-      updatedOn: z.string().optional(),
+    }),
+    z.object({
+      memberType: z.literal("intern"),
+      ...memberCommonFields,
+      internStatus: z.enum(["current", "completed"]),
+      sourceInstitution: z.string(),
+      // Degree status DURING the internship period (not the current/latest status).
+      internshipDegreeStatus: z.enum([
+        "undergraduate_studying",
+        "undergraduate_graduated",
+        "master_studying",
+        "master_graduated",
+        "phd_studying",
+        "phd_graduated",
+        "other",
+      ]),
+      currentDestination: memberDestination.optional(),
     }),
   ]),
 });

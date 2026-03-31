@@ -1,8 +1,9 @@
 ---
 name: "Zhengxin Yang"
 role: "Founder"
-affiliation: "YangsAI"
 summary: "Works on AIDAI and Evaluation."
+periodAtLab:
+  start: "2024-09-01"
 memberType: "employee"
 publicationView: "selected"
 publicationLimit: 6

@@ -8,6 +8,16 @@ import type { PaperEntry, PaperAuthor } from "../../../data/papers";
 import { resolveVenueKey } from "../../../data/venueMap";
 
 type StudentLevel = "undergraduate" | "master" | "phd";
+type StudentStatus = "current" | "graduated";
+type InternStatus = "current" | "completed";
+type InternshipDegreeStatus =
+  | "undergraduate_studying"
+  | "undergraduate_graduated"
+  | "master_studying"
+  | "master_graduated"
+  | "phd_studying"
+  | "phd_graduated"
+  | "other";
 
 const levelLabelMap: Record<StudentLevel, string> = {
   undergraduate: "Undergraduate",
@@ -15,29 +25,58 @@ const levelLabelMap: Record<StudentLevel, string> = {
   phd: "PhD",
 };
 
-const studentStatusText = (graduated: boolean) => (graduated ? "Graduated Student" : "Current Student");
+const studentStatusText = (status: StudentStatus) => (status === "graduated" ? "Graduated Student" : "Current Student");
+const internStatusText = (status: InternStatus) => (status === "completed" ? "Past Intern" : "Current Intern");
+const internshipDegreeStatusText = (status: InternshipDegreeStatus) =>
+  status === "undergraduate_studying"
+    ? "Pursuing Bachelor's Degree"
+    : status === "undergraduate_graduated"
+    ? "Awarded Bachelor's Degree"
+    : status === "master_studying"
+    ? "Pursuing Master's Degree"
+    : status === "master_graduated"
+    ? "Awarded Master's Degree"
+    : status === "phd_studying"
+    ? "Pursuing PhD Degree"
+    : status === "phd_graduated"
+    ? "Awarded PhD Degree"
+    : "Other";
 
-const memberTypeLabel = (memberType: "employee" | "student") =>
-  memberType === "employee" ? "Employee" : "Student";
+const memberTypeLabel = (memberType: "employee" | "student" | "intern") =>
+  memberType === "employee" ? "Employee" : memberType === "student" ? "Student" : "Intern";
 
-const memberTypeTone = (memberType: "employee" | "student") =>
+const memberTypeTone = (memberType: "employee" | "student" | "intern") =>
   memberType === "employee"
     ? "border-emerald-300/24 bg-emerald-300/10 text-emerald-100"
+    : memberType === "intern"
+    ? "border-cyan-300/24 bg-cyan-300/10 text-cyan-100"
     : "border-zinc-200/18 bg-white/8 text-zinc-200";
 
-const studentStatusTone = (graduated: boolean) =>
-  graduated ? "border-amber-300/24 bg-amber-300/10 text-amber-100" : "border-sky-300/24 bg-sky-300/10 text-sky-100";
+const studentStatusTone = (status: StudentStatus) =>
+  status === "graduated" ? "border-amber-300/24 bg-amber-300/10 text-amber-100" : "border-sky-300/24 bg-sky-300/10 text-sky-100";
+
+const internStatusTone = (status: InternStatus) =>
+  status === "completed" ? "border-amber-300/24 bg-amber-300/10 text-amber-100" : "border-sky-300/24 bg-sky-300/10 text-sky-100";
 
 const studentLevelTone = "border-violet-300/24 bg-violet-300/10 text-violet-100";
 
 const joinClassNames = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" ");
+const formatPeriod = (period: { start: string; end?: string }) => (period.end ? `${period.start} - ${period.end}` : `${period.start} - Present`);
 
 type MemberData = {
-  memberType: "employee" | "student";
+  memberType: "employee" | "student" | "intern";
+  periodAtLab: {
+    start: string;
+    end?: string;
+  };
+  studentStatus?: StudentStatus;
+  internStatus?: InternStatus;
+  sourceInstitution?: string;
+  internshipDegreeStatus?: InternshipDegreeStatus;
+  currentDestination?: { status: string; organization?: string; role?: string; location?: string; url?: string; updatedOn: string; note?: string };
   publicationView?: "all" | "selected";
   publicationLimit?: number;
   studentLevel?: StudentLevel;
-  graduated?: boolean;
   graduationYear?: number;
   extraPublications?: Array<{
     title: string;
@@ -63,7 +102,7 @@ if (!slug) {
 }
 
 const entries = await getCollection("team-members");
-const entry = entries.find((item) => item.id === slug || item.id.replace(/\.md$/, "") === slug);
+const entry = entries.find((item) => item.id.replace(/\.md$/, "") === slug);
 if (!entry) {
   throw new Error(`Team member markdown not found for slug: ${slug}`);
 }
@@ -72,15 +111,19 @@ const { Content } = await entry.render();
 const data = entry.data;
 const name = data.name;
 const role = data.role;
-const affiliation = data.affiliation;
 const summary = data.summary;
 const avatar = data.avatar;
 const email = data.email;
 const website = data.website;
 const updatedOn = data.updatedOn;
 const memberType = (data as MemberData).memberType;
+const periodAtLab = (data as MemberData).periodAtLab;
+const currentDestination = (data as MemberData).currentDestination;
 const studentLevel = (data as MemberData).studentLevel;
-const graduated = memberType === "student" ? (data as MemberData).graduated ?? false : false;
+const studentStatus = memberType === "student" ? (data as MemberData).studentStatus ?? "current" : undefined;
+const internStatus = memberType === "intern" ? (data as MemberData).internStatus ?? "current" : undefined;
+const sourceInstitution = memberType === "intern" ? (data as MemberData).sourceInstitution : undefined;
+const internshipDegreeStatus = memberType === "intern" ? (data as MemberData).internshipDegreeStatus : undefined;
 const graduationYear = memberType === "student" ? (data as MemberData).graduationYear : undefined;
 const publicationView = (data as MemberData).publicationView ?? "all";
 const publicationLimitRaw = (data as MemberData).publicationLimit;
@@ -106,7 +149,7 @@ const memberPaperFeed = [...memberPapers, ...extraMemberPapers.filter((paper) =>
 const publicationFilteredPapers = publicationView === "selected" ? memberPaperFeed.filter((paper) => paper.selected) : memberPaperFeed;
 const displayedPapers = publicationLimit ? publicationFilteredPapers.slice(0, publicationLimit) : publicationFilteredPapers;
 
-const buildFallbackAvatar = (displayName: string, type: "employee" | "student") => {
+const buildFallbackAvatar = (displayName: string, type: "employee" | "student" | "intern") => {
   const escapedName = displayName
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -184,12 +227,10 @@ const personSchema: Record<string, unknown> = {
   "name": name,
   "url": memberCanonicalUrl,
   ...(role && { "jobTitle": role }),
-  ...(affiliation && {
-    "worksFor": {
-      "@type": "Organization",
-      "name": affiliation,
-    },
-  }),
+  "worksFor": {
+    "@type": "Organization",
+    "name": "YangsAI",
+  },
   ...(summary && { "description": summary }),
   ...(email && { "email": email }),
   ...(website && { "sameAs": [website] }),
@@ -226,7 +267,7 @@ const personSchema: Record<string, unknown> = {
           )}
           <div>
             <h1 class="text-4xl font-semibold tracking-tight text-zinc-100 md:text-5xl">{name}</h1>
-            <p class="mt-2 text-sm text-zinc-300">{role} · {affiliation}</p>
+            <p class="mt-2 text-sm text-zinc-300">{role}</p>
             <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
               <span data-member-tag="type" class={joinClassNames("rounded-full border px-2 py-0.5", memberTypeTone(memberType))}>
                 {memberTypeLabel(memberType)}
@@ -236,14 +277,34 @@ const personSchema: Record<string, unknown> = {
                   {levelLabelMap[studentLevel]}
                 </span>
               ) : null}
-              {memberType === "student" ? (
-                <span data-member-tag="status" class={joinClassNames("rounded-full border px-2 py-0.5", studentStatusTone(graduated))}>
-                  {studentStatusText(graduated)}
+              {memberType === "student" && studentStatus ? (
+                <span data-member-tag="status" class={joinClassNames("rounded-full border px-2 py-0.5", studentStatusTone(studentStatus))}>
+                  {studentStatusText(studentStatus)}
                 </span>
               ) : null}
-              {memberType === "student" && graduated && graduationYear ? (
+              {memberType === "intern" && internStatus ? (
+                <span data-member-tag="status" class={joinClassNames("rounded-full border px-2 py-0.5", internStatusTone(internStatus))}>
+                  {internStatusText(internStatus)}
+                </span>
+              ) : null}
+              {memberType === "student" && studentStatus === "graduated" && graduationYear ? (
                 <span class="text-zinc-400">Class of {graduationYear}</span>
               ) : null}
+            </div>
+            <div class="mt-3 space-y-1 text-xs text-zinc-300/90">
+              {memberType === "intern" && sourceInstitution ? (
+                <p>
+                  <span class="text-zinc-400">Institution:</span> {sourceInstitution}
+                </p>
+              ) : null}
+              {memberType === "intern" && internshipDegreeStatus ? (
+                <p>
+                  <span class="text-zinc-400">Degree Status:</span> {internshipDegreeStatusText(internshipDegreeStatus)}
+                </p>
+              ) : null}
+              <p>
+                <span class="text-zinc-400">In Lab:</span> {formatPeriod(periodAtLab)}
+              </p>
             </div>
           </div>
         </div>
@@ -267,6 +328,23 @@ const personSchema: Record<string, unknown> = {
     ) : null}
     {updatedOn ? <span class="text-xs text-zinc-400">Updated: {updatedOn}</span> : null}
   </div>
+
+  {memberType === "intern" && internStatus === "completed" && currentDestination ? (
+    <section class="mt-4 rounded-xl border border-white/12 bg-white/4 p-4 md:p-5">
+      <p class="font-tech text-[0.68rem] uppercase tracking-[0.12em] text-zinc-300">Current Destination</p>
+      <p class="mt-2 text-sm text-zinc-200">{currentDestination.status}</p>
+      {currentDestination.organization ? <p class="mt-1 text-sm text-zinc-300">{currentDestination.organization}</p> : null}
+      {currentDestination.role ? <p class="mt-1 text-sm text-zinc-300">{currentDestination.role}</p> : null}
+      {currentDestination.location ? <p class="mt-1 text-sm text-zinc-300">{currentDestination.location}</p> : null}
+      {currentDestination.url ? (
+        <a href={currentDestination.url} target="_blank" rel="noreferrer" class="mt-2 inline-flex text-sm text-sky-200 underline underline-offset-4">
+          Destination Link
+        </a>
+      ) : null}
+      {currentDestination.note ? <p class="mt-2 text-sm text-zinc-300">{currentDestination.note}</p> : null}
+      <p class="mt-2 text-xs text-zinc-400">Destination info updated: {currentDestination.updatedOn}</p>
+    </section>
+  ) : null}
 
   <article data-member-content class="mt-7 text-zinc-200 [&_h2]:mt-8 [&_h2]:border-b [&_h2]:border-white/12 [&_h2]:pb-2 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:text-zinc-100 [&_h3]:mt-6 [&_h3]:text-lg [&_h3]:font-medium [&_h3]:text-zinc-100 [&_p]:mt-3 [&_p]:leading-relaxed [&_a]:text-sky-200 [&_a]:underline [&_a]:underline-offset-4 [&_.pub-link-btn]:inline-flex [&_.pub-link-btn]:items-center [&_.pub-link-btn]:rounded-lg [&_.pub-link-btn]:border [&_.pub-link-btn]:border-sky-200/35 [&_.pub-link-btn]:bg-sky-300/10 [&_.pub-link-btn]:px-3 [&_.pub-link-btn]:py-1.5 [&_.pub-link-btn]:text-xs [&_.pub-link-btn]:font-semibold [&_.pub-link-btn]:tracking-wide [&_.pub-link-btn]:text-sky-100 [&_.pub-link-btn]:break-all [&_.pub-link-btn]:no-underline [&_.pub-link-btn]:transition-colors [&_.pub-link-btn:hover]:bg-sky-300/20 [&_.pub-link-btn:hover]:text-white [&_.author-self]:rounded [&_.author-self]:bg-emerald-200/12 [&_.author-self]:px-1.5 [&_.author-self]:py-0.5 [&_.author-self]:font-semibold [&_.author-self]:text-emerald-200 [&_.author-corresponding]:rounded [&_.author-corresponding]:bg-violet-200/12 [&_.author-corresponding]:px-1.5 [&_.author-corresponding]:py-0.5 [&_.author-corresponding]:font-semibold [&_.author-corresponding]:text-violet-200 [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-5 [&_ol]:mt-3 [&_ol]:list-decimal [&_ol]:space-y-1.5 [&_ol]:pl-5 [&_blockquote]:mt-4 [&_blockquote]:rounded-lg [&_blockquote]:border-l-4 [&_blockquote]:border-sky-300/42 [&_blockquote]:bg-sky-300/8 [&_blockquote]:px-4 [&_blockquote]:py-2 [&_.callout]:mt-4 [&_.callout]:rounded-lg [&_.callout]:border [&_.callout]:border-white/16 [&_.callout]:bg-white/7 [&_.callout]:px-4 [&_.callout]:py-3 [&_.callout.note]:border-sky-300/38 [&_.callout.note]:bg-sky-300/12 [&_h2+ol]:mt-4 [&_h2+ol]:list-none [&_h2+ol]:space-y-3 [&_h2+ol]:pl-0 [&_h2+ol_li]:rounded-xl [&_h2+ol_li]:border [&_h2+ol_li]:border-white/14 [&_h2+ol_li]:bg-white/4 [&_h2+ol_li]:px-4 [&_h2+ol_li]:py-3 [&_h2+ol_li]:shadow-[0_8px_22px_rgba(0,0,0,0.12)] [&_h2+ol_li_p]:my-0 [&_h2+ol_li_p+p]:mt-1.5 [&_h2+ol_li_p:first-of-type]:text-zinc-100 [&_h2+ol_li_p:first-of-type]:font-semibold [&_h2+ol_li_p:first-of-type]:leading-snug [&_h2+ol_li_p:nth-of-type(2)]:text-zinc-200 [&_h2+ol_li_p:nth-of-type(3)]:text-sky-200 [&_h2+ol_li_p:nth-of-type(3)]:font-medium [&_h2+ol_li_p>strong]:font-inherit">
     <Content />
@@ -297,7 +375,7 @@ const personSchema: Record<string, unknown> = {
     ) : null}
     <PaperList
       papers={displayedPapers}
-      emptyMessage={`No publications found for ${name} in src/data/papers.ts or extraPublications.`}
+      emptyMessage="No Publications"
       disableAuthorLinkForName={name}
     />
   </section>

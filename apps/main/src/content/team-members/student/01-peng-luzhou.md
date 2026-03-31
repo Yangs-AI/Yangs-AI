@@ -1,11 +1,12 @@
 ---
 name: "Luzhou Peng"
 role: "Research Member"
-affiliation: "YangsAI"
 summary: "Works on model evaluation and design."
+periodAtLab:
+  start: "2024-09-01"
 memberType: "student"
 studentLevel: "master"
-graduated: false
+studentStatus: "current"
 extraPublications:
   - title: "AGIBench: A Multi-granularity, Multimodal, Human-Referenced, Auto-Scoring Benchmark for Large Language Models"
     venue: "Bench"

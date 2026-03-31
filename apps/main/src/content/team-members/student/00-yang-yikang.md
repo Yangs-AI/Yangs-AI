@@ -1,11 +1,12 @@
 ---
 name: "Yikang Yang"
 role: "Research Member"
-affiliation: "YangsAI"
 summary: "Focuses on AIDAI and graph diffusion models."
+periodAtLab:
+  start: "2024-09-01"
 memberType: "student"
 studentLevel: "phd"
-graduated: false
+studentStatus: "current"
 extraPublications:
   - title: "A Linear Combination-Based Method to Construct Proxy Benchmarks for Big Data Workloads"
     venue: "Bench"
