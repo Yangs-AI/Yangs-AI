@@ -3,6 +3,7 @@ name: "Linye Liu"
 role: "Research Intern"
 summary: "Works on AIDAI."
 memberType: "intern"
+avatarGender: "masculine"
 
 periodAtLab:
   start: "2025-11-01"

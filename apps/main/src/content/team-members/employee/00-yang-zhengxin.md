@@ -5,6 +5,8 @@ summary: "Works on AIDAI and Evaluation."
 periodAtLab:
   start: "2024-09-01"
 memberType: "employee"
+avatarGender: "masculine"
+employeeStatus: "current" # current | past
 publicationView: "selected"
 publicationLimit: 6
 

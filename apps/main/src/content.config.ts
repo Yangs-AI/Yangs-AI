@@ -37,6 +37,7 @@ const memberCommonFields = {
   role: z.string(),
   summary: z.string(),
   periodAtLab: memberPeriod,
+  avatarGender: z.enum(["masculine", "feminine", "neutral"]).optional(),
   extraPublications: z.array(extraPublication).optional(),
   publicationView: z.enum(["all", "selected"]).optional(),
   publicationLimit: z.number().int().positive().optional(),
@@ -61,6 +62,8 @@ const teamMembers = defineCollection({
     z.object({
       memberType: z.literal("employee"),
       ...memberCommonFields,
+      employeeStatus: z.enum(["current", "past"]),
+      currentDestination: memberDestination.optional(),
     }),
     z.object({
       memberType: z.literal("student"),

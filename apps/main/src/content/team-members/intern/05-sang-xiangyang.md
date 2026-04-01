@@ -3,6 +3,7 @@ name: "Xiangyang Sang"
 role: "Research Intern"
 summary: "Works on LLM Evaluation."
 memberType: "intern"
+avatarGender: "masculine"
 
 periodAtLab:
   start: "2025-10-20"

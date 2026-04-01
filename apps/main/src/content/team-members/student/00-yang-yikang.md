@@ -5,6 +5,7 @@ summary: "Focuses on AIDAI and graph diffusion models."
 periodAtLab:
   start: "2024-09-01"
 memberType: "student"
+avatarGender: "masculine"
 studentLevel: "phd"
 studentStatus: "current"
 extraPublications:

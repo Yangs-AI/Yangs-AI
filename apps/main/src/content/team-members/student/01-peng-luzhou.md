@@ -5,6 +5,7 @@ summary: "Works on model evaluation and design."
 periodAtLab:
   start: "2024-09-01"
 memberType: "student"
+avatarGender: "masculine"
 studentLevel: "master"
 studentStatus: "current"
 extraPublications:

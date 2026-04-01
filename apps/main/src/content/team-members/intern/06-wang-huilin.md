@@ -1,17 +1,17 @@
 ---
-name: "Yilin Han"
+name: "Huilin Wang"
 role: "Research Intern"
 summary: "Works on AIDAI."
 memberType: "intern"
 avatarGender: "feminine"
 
 periodAtLab:
-  start: "2025-11-10"
+  start: "2026-01-26"
 
 internStatus: "current" # current | completed
-sourceInstitution: "Hebei University of Technology"
+sourceInstitution: "North China Institute of Science and Technology"
 internshipDegreeStatus: "undergraduate_studying" # degree status during internship
 
-order: 103
-updatedOn: "2026-03-20"
+order: 106
+updatedOn: "2026-04-01"
 ---

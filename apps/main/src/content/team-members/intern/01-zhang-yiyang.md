@@ -3,6 +3,7 @@ name: "Yiyang Zhang"
 role: "Research Intern"
 summary: "Works on AI4Science."
 memberType: "intern"
+avatarGender: "masculine"
 
 periodAtLab:
   start: "2025-08-01"
