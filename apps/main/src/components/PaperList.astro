@@ -196,7 +196,29 @@ const normalizeFilterValue = (value: string) => value.trim().toLowerCase().repla
             </button>
           ) : null}
 
-          {paper.paperUrl ? (
+          {paper.preprintUrl ? (
+            <a
+              href={paper.preprintUrl}
+              target="_blank"
+              rel="noreferrer"
+              class="rounded-lg border border-zinc-100/24 bg-white/8 px-3 py-1.5 text-xs font-medium text-zinc-100 hover:bg-white/16"
+            >
+              Preprint
+            </a>
+          ) : null}
+
+          {paper.otherUrl ? (
+            <a
+              href={paper.otherUrl}
+              target="_blank"
+              rel="noreferrer"
+              class="rounded-lg border border-zinc-100/24 bg-white/8 px-3 py-1.5 text-xs font-medium text-zinc-100 hover:bg-white/16"
+            >
+              Published
+            </a>
+          ) : null}
+
+          {!paper.preprintUrl && !paper.otherUrl && paper.paperUrl ? (
             <a
               href={paper.paperUrl}
               target="_blank"
@@ -205,9 +227,11 @@ const normalizeFilterValue = (value: string) => value.trim().toLowerCase().repla
             >
               Paper
             </a>
-          ) : (
+          ) : null}
+
+          {!paper.preprintUrl && !paper.otherUrl && !paper.paperUrl ? (
             <span class="rounded-lg border border-zinc-100/12 bg-white/4 px-3 py-1.5 text-xs text-zinc-400">Paper N/A</span>
-          )}
+          ) : null}
 
           {paper.codeUrl ? (
             <a
