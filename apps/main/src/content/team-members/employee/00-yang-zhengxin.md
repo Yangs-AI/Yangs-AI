@@ -26,8 +26,6 @@ His research focuses on **Artificial Intelligence Designed Artificial Intelligen
 For a full academic CV, publications, and background, please refer to:
 👉 https://jason-young.me
 
----
-
 ## Research Interests
 
 - Artificial Intelligence Designed Artificial Intelligence (AIDAI)
