@@ -78,7 +78,7 @@ export const portalNodes: PortalNode[] = [
       { label: "Directions", href: "/research/directions" },
     ],
     links: [
-      { label: "Selected Papers", href: "/research/papers/selected" },
+      { label: "Papers", href: "/research/papers" },
       { label: "Selected Projects", href: "/research/projects/selected" },
     ],
   },

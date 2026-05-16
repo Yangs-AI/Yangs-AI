@@ -14,8 +14,8 @@ export const homeFeaturedLinks: HomeFeaturedLink[] = [
     note: "Leaderboard and analysis platform for the Probing Memes paradigm, evaluating large language models through population-level probing.",
   },
   {
-    label: "Selected Papers",
-    href: "/research/papers/selected",
-    note: "Recent highlighted publications",
+    label: "Papers",
+    href: "/research/papers",
+    note: "Browse all papers with built-in selected filter",
   },
 ];

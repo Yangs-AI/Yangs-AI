@@ -26,9 +26,13 @@ const papersListSchema = {
   <p class="font-tech mt-5 text-xs uppercase tracking-[0.12em] text-zinc-300">Research</p>
   <h1 class="mt-4 text-4xl font-semibold tracking-tight text-zinc-100 md:text-5xl">Papers</h1>
   <p class="mt-4 max-w-3xl text-base leading-relaxed text-zinc-300">
-    Full paper index. For a curated entry point, open
-    <a href="/research/papers/selected" class="underline decoration-zinc-400 underline-offset-2 hover:decoration-zinc-200">Selected Papers</a>.
+    Full paper index. Use the Publications filter to switch between Selected only and All.
   </p>
 
-  <PaperList papers={papers} emptyMessage="Add your first paper in src/data/papers.ts." />
+  <PaperList
+    papers={papers}
+    emptyMessage="Add your first paper in src/data/papers.ts."
+    enableSelectedToggle={true}
+    selectedOnlyByDefault={false}
+  />
 </SubpageLayout>

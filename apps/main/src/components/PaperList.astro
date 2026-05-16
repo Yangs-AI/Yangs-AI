@@ -13,9 +13,17 @@ interface Props {
   papers: PaperEntry[];
   emptyMessage?: string;
   disableAuthorLinkForName?: string;
+  enableSelectedToggle?: boolean;
+  selectedOnlyByDefault?: boolean;
 }
 
-const { papers, emptyMessage = "No papers yet.", disableAuthorLinkForName } = Astro.props;
+const {
+  papers,
+  emptyMessage = "No papers yet.",
+  disableAuthorLinkForName,
+  enableSelectedToggle = false,
+  selectedOnlyByDefault = false,
+} = Astro.props;
 
 const sortedPapers = [...papers].sort(
   (a, b) => new Date(b.publishedOn).getTime() - new Date(a.publishedOn).getTime(),
@@ -73,7 +81,11 @@ const filterAuthorOptions = Array.from(
 const normalizeFilterValue = (value: string) => value.trim().toLowerCase().replace(/\s+/g, " ");
 ---
 
-<section class="mt-8 space-y-4" data-paper-list-root>
+<section
+  class="mt-8 space-y-4"
+  data-paper-list-root
+  data-selected-default={selectedOnlyByDefault ? "selected" : "all"}
+>
   <p class="text-xs text-zinc-400">Author roles are highlighted for quick scanning.</p>
 
   {sortedPapers.length > 0 ? (
@@ -99,6 +111,16 @@ const normalizeFilterValue = (value: string) => value.trim().toLowerCase().repla
           </select>
         </label>
 
+        {enableSelectedToggle ? (
+          <label class="paper-filter-field">
+            <span>Publications</span>
+            <select data-paper-filter-view>
+              <option value="selected" selected={selectedOnlyByDefault}>Selected only</option>
+              <option value="all" selected={!selectedOnlyByDefault}>All</option>
+            </select>
+          </label>
+        ) : null}
+
         <button type="button" class="paper-filter-reset" data-paper-filter-reset>
           Reset
         </button>
@@ -121,6 +143,7 @@ const normalizeFilterValue = (value: string) => value.trim().toLowerCase().repla
         data-paper-item
         data-paper-venue={paper.venue}
         data-paper-authors={paper.authors.map((author) => normalizeFilterValue(author.name.replace(/\*/g, ""))).join("|")}
+        data-paper-selected={paper.selected ? "true" : "false"}
       >
         <h2 class="text-xl font-semibold leading-snug text-zinc-100">{paper.title}</h2>
         <p class="mt-2 text-sm text-zinc-300">
@@ -304,6 +327,7 @@ const normalizeFilterValue = (value: string) => value.trim().toLowerCase().repla
     backdrop-filter: blur(6px);
   }
 
+
   .paper-filter-field {
     display: inline-flex;
     flex-direction: column;
@@ -481,6 +505,7 @@ const normalizeFilterValue = (value: string) => value.trim().toLowerCase().repla
     box-shadow: 0 10px 24px rgba(98, 124, 158, 0.16);
   }
 
+
   :global(html[data-theme="light"] .paper-filter-reset) {
     border-color: rgba(51, 65, 85, 0.24);
     background: rgba(241, 245, 249, 0.9);
@@ -629,10 +654,13 @@ const normalizeFilterValue = (value: string) => value.trim().toLowerCase().repla
   paperRoots.forEach((root) => {
     const venueSelect = root.querySelector("[data-paper-filter-venue]");
     const authorSelect = root.querySelector("[data-paper-filter-author]");
+    const viewSelect = root.querySelector("[data-paper-filter-view]");
     const resetButton = root.querySelector("[data-paper-filter-reset]");
     const countEl = root.querySelector("[data-paper-filter-count]");
     const items = Array.from(root.querySelectorAll("[data-paper-item]"));
     const emptyEl = root.querySelector("[data-paper-filter-empty]");
+    const selectedDefault = root.getAttribute("data-selected-default") === "selected";
+    let selectedOnly = viewSelect instanceof HTMLSelectElement ? viewSelect.value === "selected" : selectedDefault;
 
     if (!(venueSelect instanceof HTMLSelectElement) || !(authorSelect instanceof HTMLSelectElement)) {
       return;
@@ -646,9 +674,11 @@ const normalizeFilterValue = (value: string) => value.trim().toLowerCase().repla
       items.forEach((item) => {
         const paperVenue = normalize(item.getAttribute("data-paper-venue") ?? "");
         const paperAuthors = (item.getAttribute("data-paper-authors") ?? "").split("|").map(normalize);
+        const isSelected = (item.getAttribute("data-paper-selected") ?? "false") === "true";
         const matchesVenue = venueValue === "all" || paperVenue === venueValue;
         const matchesAuthor = authorValue === "all" || paperAuthors.includes(authorValue);
-        const visible = matchesVenue && matchesAuthor;
+        const matchesSelected = !selectedOnly || isSelected;
+        const visible = matchesVenue && matchesAuthor && matchesSelected;
 
         if (visible) {
           visibleCount += 1;
@@ -672,12 +702,25 @@ const normalizeFilterValue = (value: string) => value.trim().toLowerCase().repla
     venueSelect.addEventListener("change", applyFilters);
     authorSelect.addEventListener("change", applyFilters);
 
+    if (viewSelect instanceof HTMLSelectElement) {
+      viewSelect.addEventListener("change", () => {
+        selectedOnly = viewSelect.value === "selected";
+        applyFilters();
+      });
+    }
+
     if (resetButton instanceof HTMLButtonElement) {
       resetButton.addEventListener("click", () => {
         venueSelect.value = "all";
         authorSelect.value = "all";
+        if (viewSelect instanceof HTMLSelectElement) {
+          viewSelect.value = selectedDefault ? "selected" : "all";
+          selectedOnly = viewSelect.value === "selected";
+        }
         applyFilters();
       });
     }
+
+    applyFilters();
   });
 </script>

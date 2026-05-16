@@ -49,7 +49,6 @@ export const papers: PaperEntry[] = [
       { name: "Wanling Gao" },
       { name: "Jianfeng Zhan" },
     ],
-    selected: false,
   },
   {
     id: "probing-memes-entangled-evaluation-world",

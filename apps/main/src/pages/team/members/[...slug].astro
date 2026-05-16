@@ -154,8 +154,7 @@ const extraMemberPapers: PaperEntry[] = extraPublications.map((paper, index) => 
 }));
 const knownTitles = new Set(memberPapers.map((paper) => paper.title.trim().toLowerCase()));
 const memberPaperFeed = [...memberPapers, ...extraMemberPapers.filter((paper) => !knownTitles.has(paper.title.trim().toLowerCase()))];
-const publicationFilteredPapers = publicationView === "selected" ? memberPaperFeed.filter((paper) => paper.selected) : memberPaperFeed;
-const displayedPapers = publicationLimit ? publicationFilteredPapers.slice(0, publicationLimit) : publicationFilteredPapers;
+const displayedPapers = publicationLimit ? memberPaperFeed.slice(0, publicationLimit) : memberPaperFeed;
 
 const fallbackAvatar = buildFallbackAvatar(name, memberType, avatarGender);
 const avatarSrc = avatar || fallbackAvatar;
@@ -234,19 +233,19 @@ const personSchema: Record<string, unknown> = {
                 <span class="text-zinc-400">{employeeStatusText(employeeStatus)}</span>
               ) : null}
             </div>
-            <div class="mt-3 space-y-1 text-xs text-zinc-300/90">
+            <div class="mt-3 space-y-1 text-xs text-zinc-300/90" data-member-meta>
               {memberType === "intern" && sourceInstitution ? (
                 <p>
-                  <span class="text-zinc-400">Affiliation:</span> {sourceInstitution}
+                  <span class="text-zinc-400 member-meta-label">Affiliation:</span> {sourceInstitution}
                 </p>
               ) : null}
               {memberType === "intern" && internshipDegreeStatus ? (
                 <p>
-                  <span class="text-zinc-400">Degree Status:</span> {internshipDegreeStatusText(internshipDegreeStatus)}
+                  <span class="text-zinc-400 member-meta-label">Degree Status:</span> {internshipDegreeStatusText(internshipDegreeStatus)}
                 </p>
               ) : null}
               <p>
-                <span class="text-zinc-400">In Lab:</span> {formatPeriod(periodAtLab)}
+                <span class="text-zinc-400 member-meta-label">In Lab:</span> {formatPeriod(periodAtLab)}
               </p>
             </div>
           </div>
@@ -300,18 +299,12 @@ const personSchema: Record<string, unknown> = {
         href="/research/papers"
         class="rounded-md border border-zinc-100/24 bg-white/8 px-2.5 py-1 text-xs font-medium text-zinc-100 hover:bg-white/16"
       >
-        View All Papers
-      </a>
-      <a
-        href="/research/papers/selected"
-        class="rounded-md border border-zinc-100/24 bg-white/8 px-2.5 py-1 text-xs font-medium text-zinc-100 hover:bg-white/16"
-      >
-        Selected Papers
+        Browse Papers
       </a>
     </div>
     {publicationView === "selected" ? (
       <p class="mt-3 text-sm text-zinc-300">
-        Showing highlighted papers authored by {name}{publicationLimit ? ` (top ${publicationLimit})` : ""}.
+        Defaulting to highlighted papers authored by {name}; you can switch to all papers below{publicationLimit ? ` (top ${publicationLimit})` : ""}.
       </p>
     ) : publicationLimit ? (
       <p class="mt-3 text-sm text-zinc-300">Showing top {publicationLimit} papers authored by {name}.</p>
@@ -320,6 +313,8 @@ const personSchema: Record<string, unknown> = {
       papers={displayedPapers}
       emptyMessage="No Publications"
       disableAuthorLinkForName={name}
+      enableSelectedToggle={true}
+      selectedOnlyByDefault={publicationView === "selected"}
     />
   </section>
 
@@ -377,6 +372,15 @@ const personSchema: Record<string, unknown> = {
       border-color: rgba(23, 33, 47, 0.14);
       background: rgba(248, 251, 255, 0.8);
       box-shadow: 0 8px 22px rgba(100, 124, 156, 0.14);
+    }
+
+    :global(html[data-theme="light"] [data-member-meta]) {
+      color: #334155;
+    }
+
+    :global(html[data-theme="light"] [data-member-meta] .member-meta-label) {
+      color: #0f172a;
+      font-weight: 600;
     }
   </style>
 </SubpageLayout>
