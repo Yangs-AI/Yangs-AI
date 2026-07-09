@@ -7,11 +7,12 @@ avatarGender: "feminine"
 
 periodAtLab:
   start: "2026-01-26"
+  end: "2026-07-01"
 
-internStatus: "current" # current | completed
+internStatus: "completed" # current | completed
 sourceInstitution: "North China Institute of Science and Technology"
 internshipDegreeStatus: "undergraduate_studying" # degree status during internship
 
 order: 106
-updatedOn: "2026-04-01"
+updatedOn: "2026-07-10"
 ---
