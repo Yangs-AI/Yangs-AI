@@ -35,20 +35,29 @@ export const papers: PaperEntry[] = [
   {
     id: "beyond-benchmarks-causally-faithful-evaluation-llms",
     title: "Beyond Benchmarks: Toward Causally Faithful Evaluation of Large Language Models",
-    venue: "Preprint",
+    venue: "ICML",
     publishedOn: "2026-05",
     authors: [
       { name: "Zhengshuyuan Tian", isFirstAuthor: true },
+      { name: "Wanling Gao", isFirstAuthor: true, isCorrespondingAuthor: true },
       { name: "Chuanxin Lan" },
       { name: "Chenxi Wang" },
       { name: "Lei Wang" },
       { name: "Guoxin Kang" },
       { name: "Zhengxin Yang" },
       { name: "Yunyou Huang" },
-      { name: "Xuehai Hong" },
-      { name: "Wanling Gao" },
+      { name: "Xuehai Hong", isCorrespondingAuthor: true },
       { name: "Jianfeng Zhan" },
     ],
+    paperUrl: "https://openreview.net/forum?id=XAp0VUy20q",
+    bibtex: `@inproceedings{
+tian2026beyond,
+title={Beyond Benchmarks: Toward Causally Faithful Evaluation of Large Language Models},
+author={Zhengshuyuan Tian and Wanling Gao and Chuanxin Lan and Chenxi Wang and Lei Wang and Guoxin Kang and Zhengxin Yang and Yunyou Huang and Xuehai Hong and Jianfeng Zhan},
+booktitle={Forty-third International Conference on Machine Learning},
+year={2026},
+url={https://openreview.net/forum?id=XAp0VUy20q}
+}`,
   },
   {
     id: "probing-memes-entangled-evaluation-world",

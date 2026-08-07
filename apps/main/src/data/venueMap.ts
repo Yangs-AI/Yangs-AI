@@ -27,6 +27,10 @@ export const venueCatalog = {
     fullName: "Journal of Xiamen University (Natural Science)",
     aliases: ["JXMU"],
   },
+  ICML: {
+    fullName: "International Conference on Machine Learning",
+    aliases: ["ICML"],
+  },
   Bench: {
     fullName: "BenchCouncil International Symposium On Evaluatology: Evaluation Science and Engineering",
     aliases: ["Bench"],
