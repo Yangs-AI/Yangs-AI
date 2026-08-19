@@ -33,6 +33,32 @@ export interface PaperEntry {
 // Keep this list as the single source of truth for paper pages.
 export const papers: PaperEntry[] = [
   {
+    id: "when-ai-designs-ai",
+    title: "When AI Designs AI: Innovation or Imitation?",
+    venue: "Preprint",
+    publishedOn: "2026-08-18",
+    authors: [
+      { name: "Yikang Yang", isFirstAuthor: true },
+      { name: "Zhengxin Yang", isCorrespondingAuthor: true },
+      { name: "Luzhou Peng" },
+      { name: "Minghao Luo" },
+      { name: "Yanqi Kan" },
+      { name: "Wanling Gao" },
+      { name: "Jianfeng Zhan" },
+    ],
+    preprintUrl: "https://arxiv.org/abs/2608.17471",
+    bibtex: `@misc{yang2026aidesignsaiinnovation,
+      title={When AI Designs AI: Innovation or Imitation?}, 
+      author={Yikang Yang and Zhengxin Yang and Luzhou Peng and Minghao Luo and Yanqi Kan and Wanling Gao and Jianfeng Zhan},
+      year={2026},
+      eprint={2608.17471},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2608.17471}, 
+}`,
+    selected: true,
+  },
+  {
     id: "beyond-benchmarks-causally-faithful-evaluation-llms",
     title: "Beyond Benchmarks: Toward Causally Faithful Evaluation of Large Language Models",
     venue: "ICML",
