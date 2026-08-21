@@ -38,7 +38,7 @@ export const homeNewsItems: HomeNewsItem[] = [
       "Both papers are now available on the research papers page.",
     ],
     ctaLabel: "View Papers",
-    ctaHref: "/research/papers/",
+    ctaHref: "/research/publications/",
   },
   {
     id: "yangsai-website-launch-2026-03",
