@@ -1,0 +1,38 @@
+---
+import PublicationCatalog from "../../../components/PublicationCatalog.astro";
+import BackButton from "../../../components/BackButton.astro";
+import { publications } from "../../../data/publications";
+import SubpageLayout from "../../../layouts/SubpageLayout.astro";
+
+const publicationsListSchema = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "url": "https://yangs.ai/research/publications",
+  "name": "Research Publications | Yangs AI",
+  "description": "Publication list for Yangs AI research.",
+  "publisher": { "@id": "https://yangs.ai/#organization" },
+  "hasPart": publications.map((item) => ({
+    "@type": "ScholarlyArticle",
+    "headline": item.title,
+    "datePublished": item.publishedOn,
+    "author": item.authors.map((a) => ({ "@type": "Person", "name": a.name })),
+    ...(item.paperUrl && { "url": item.paperUrl }),
+  })),
+};
+---
+
+<SubpageLayout title="Research Publications | Yangs AI" description="Publication list for Yangs AI research." schema={publicationsListSchema}>
+  <BackButton href="/research" label="Back to Research" />
+  <p class="font-tech mt-5 text-xs uppercase tracking-[0.12em] text-zinc-300">Research</p>
+  <h1 class="mt-4 text-4xl font-semibold tracking-tight text-zinc-100 md:text-5xl">Publications</h1>
+  <p class="mt-4 max-w-3xl text-base leading-relaxed text-zinc-300">
+    Unified publication index with Selected toggle, type keys, filter controls, and grouped sections by year and publication type.
+  </p>
+
+  <PublicationCatalog
+    items={publications}
+    emptyMessage="Add your first publication in src/data/publications.ts (or src/data/papers.ts for paper entries)."
+    enableSelectedToggle={true}
+    selectedOnlyByDefault={false}
+  />
+</SubpageLayout>

@@ -66,20 +66,20 @@ export const portalNodes: PortalNode[] = [
   {
     id: "research",
     label: "Research",
-    shortDescription: "Papers, projects, and long-term research directions.",
+    shortDescription: "Publications, projects, and long-term research directions.",
     detailDescription:
-      "Explore the research landscape of YangsAI through papers, projects, and evolving directions across neural networks, AI systems, and foundational studies.",
+      "Explore the research landscape of YangsAI through publications, projects, and evolving directions across neural networks, AI systems, and foundational studies.",
     positionDesktop: { x: 18, y: 21 },
     positionMobile: { x: 24, y: 16 },
     subItems: [
       { label: "About", href: "/research", activeMatch: "exact" },
-      { label: "Papers", href: "/research/papers" },
       { label: "Projects", href: "/research/projects" },
       { label: "Directions", href: "/research/directions" },
+      { label: "Publications", href: "/research/publications" },
     ],
     links: [
-      { label: "Papers", href: "/research/papers" },
       { label: "Selected Projects", href: "/research/projects/selected" },
+      { label: "Publications", href: "/research/publications" },
     ],
   },
   {
@@ -104,17 +104,22 @@ export const portalNodes: PortalNode[] = [
   {
     id: "resources",
     label: "Resources",
-    shortDescription: "Datasets, benchmarks, and documentation for reproducible AI research.",
+    shortDescription: "Tools, datasets, benchmarks, and documentation for reproducible AI research.",
     detailDescription:
-      "Access research resources across datasets, benchmarks, and documentation, including representative entries such as Younger Datasets, Probing Memes, and FRESH documentation.",
+      "Access research resources across tools, datasets, benchmarks, and documentation, including representative entries such as Younger Datasets, Probing Memes, and FRESH documentation.",
     positionDesktop: { x: 82, y: 18 },
     positionMobile: { x: 78, y: 26 },
     subItems: [
+      { label: "Tools", href: "/resources/tools" },
       { label: "Datasets", href: "https://datasets.yangs.ai", external: true },
       { label: "Benchmarks", href: "https://benchmarks.yangs.ai", external: true },
       { label: "Documentations", href: "https://documentations.yangs.ai", external: true, draft: true },
     ],
     links: [
+      {
+        label: "Tools",
+        href: "/resources/tools",
+      },
       {
         label: "Younger Datasets",
         href: "https://datasets.yangs.ai/younger",

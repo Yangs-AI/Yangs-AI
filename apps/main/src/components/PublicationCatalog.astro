@@ -1,0 +1,1146 @@
+---
+import { getCollection } from "astro:content";
+import {
+  publications,
+  publicationKindLabels,
+  publicationKindOrder,
+  authorLinks,
+  type PublicationEntry,
+  type PublicationKind,
+} from "../data/publications";
+import {
+  getVenueFilterLabel,
+  getVenuePaperLabel,
+  resolveVenueKey,
+  type VenueKey,
+} from "../data/venueMap";
+
+interface Props {
+  items?: PublicationEntry[];
+  emptyMessage?: string;
+  disableAuthorLinkForName?: string;
+  enableSelectedToggle?: boolean;
+  selectedOnlyByDefault?: boolean;
+}
+
+const {
+  items = publications,
+  emptyMessage = "No publications yet.",
+  disableAuthorLinkForName,
+  enableSelectedToggle = true,
+  selectedOnlyByDefault = false,
+} = Astro.props;
+
+const parseYear = (value: string) => {
+  const direct = new Date(value).getUTCFullYear();
+  if (!Number.isNaN(direct)) {
+    return direct;
+  }
+  const fallback = /^\d{4}/.exec(value)?.[0];
+  return fallback ? Number(fallback) : 1970;
+};
+
+const formatDate = (value: string) => {
+  const withDay = new Date(`${value}T00:00:00`);
+  if (!Number.isNaN(withDay.getTime())) {
+    return withDay.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    });
+  }
+
+  const direct = new Date(value);
+  if (!Number.isNaN(direct.getTime())) {
+    return direct.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    });
+  }
+
+  return value;
+};
+
+const normalizeName = (name: string) =>
+  name.replace(/\*/g, "").trim().toLowerCase().replace(/\s+/g, " ");
+const disabledAuthorName = disableAuthorLinkForName
+  ? normalizeName(disableAuthorLinkForName)
+  : null;
+
+const teamMembers = await getCollection("team-members");
+const memberLinkByName = new Map(
+  teamMembers.map((entry) => [
+    normalizeName(entry.data.name),
+    `/team/members/${entry.id.replace(/\.md$/, "")}`,
+  ]),
+);
+
+const globalAuthorLinkByName = new Map(
+  Object.entries(authorLinks).map(([name, url]) => [normalizeName(name), url]),
+);
+
+const resolveAuthorLink = (author: { name: string; url?: string }) => {
+  if (disabledAuthorName && normalizeName(author.name) === disabledAuthorName) {
+    return null;
+  }
+
+  if (author.url) {
+    return { href: author.url, external: /^https?:\/\//i.test(author.url) };
+  }
+
+  const globalAuthorHref = globalAuthorLinkByName.get(normalizeName(author.name));
+  if (globalAuthorHref) {
+    return {
+      href: globalAuthorHref,
+      external: /^https?:\/\//i.test(globalAuthorHref),
+    };
+  }
+
+  const memberHref = memberLinkByName.get(normalizeName(author.name));
+  if (!memberHref) {
+    return null;
+  }
+
+  return { href: memberHref, external: false };
+};
+
+const kindOrderIndex = new Map(
+  publicationKindOrder.map((kind, index) => [kind, index]),
+);
+
+const sorted = [...items].sort((a, b) => {
+  const yearDiff = parseYear(b.publishedOn) - parseYear(a.publishedOn);
+  if (yearDiff !== 0) {
+    return yearDiff;
+  }
+
+  const dateDiff = new Date(b.publishedOn).getTime() - new Date(a.publishedOn).getTime();
+  if (!Number.isNaN(dateDiff) && dateDiff !== 0) {
+    return dateDiff;
+  }
+
+  const kindDiff = (kindOrderIndex.get(a.kind) ?? 999) - (kindOrderIndex.get(b.kind) ?? 999);
+  if (kindDiff !== 0) {
+    return kindDiff;
+  }
+
+  return a.title.localeCompare(b.title);
+});
+
+const years = Array.from(new Set(sorted.map((item) => parseYear(item.publishedOn)))).sort(
+  (a, b) => b - a,
+);
+const yearOptions = years.map((year) => String(year));
+
+const kindOptions = publicationKindOrder.filter((kind) =>
+  sorted.some((item) => item.kind === kind),
+);
+
+const venueOptions = Array.from(
+  new Set(sorted.map((item) => resolveVenueKey(item.venue) ?? "Other")),
+).sort((a, b) => getVenueFilterLabel(a).localeCompare(getVenueFilterLabel(b)));
+
+const grouped = years.map((year) => {
+  const yearItems = sorted.filter((item) => parseYear(item.publishedOn) === year);
+  const kinds = kindOptions
+    .map((kind) => ({
+      kind,
+      entries: yearItems.filter((item) => item.kind === kind),
+    }))
+    .filter((group) => group.entries.length > 0);
+
+  return { year, kinds };
+});
+
+const normalizeFilterValue = (value: string) =>
+  value.trim().toLowerCase().replace(/\s+/g, " ");
+---
+
+<section
+  class="mt-8 space-y-5"
+  data-publication-root
+  data-selected-default={selectedOnlyByDefault ? "selected" : "all"}
+  style="--publication-header-offset: 5.25rem;"
+>
+  {sorted.length > 0 ? (
+    <div class="publication-filters sticky z-30 rounded-xl border border-white/12 bg-white/4 p-3" data-publication-filters>
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-2" data-publication-context-row>
+        <p class="publication-context-label font-tech text-[0.68rem] uppercase tracking-[0.12em] text-zinc-200">
+          Browsing Publications
+        </p>
+        <div class="publication-context-chips" data-publication-context>
+          <span class="publication-context-chip">
+            <span class="publication-context-chip-key">Scope</span>
+            <span class="publication-context-chip-value" data-chip-scope>All</span>
+          </span>
+          <span class="publication-context-chip">
+            <span class="publication-context-chip-key">Year</span>
+            <span class="publication-context-chip-value" data-chip-year>All</span>
+          </span>
+          <span class="publication-context-chip">
+            <span class="publication-context-chip-key">Type</span>
+            <span class="publication-context-chip-value" data-chip-type>All</span>
+          </span>
+          <span class="publication-context-chip">
+            <span class="publication-context-chip-key">Venue</span>
+            <span class="publication-context-chip-value" data-chip-venue>All</span>
+          </span>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-end gap-3">
+        <label class="publication-filter-field">
+          <span>Year</span>
+          <select data-publication-filter-year>
+            <option value="all">All Years</option>
+            {yearOptions.map((year) => (
+              <option value={year}>{year}</option>
+            ))}
+          </select>
+        </label>
+
+        <label class="publication-filter-field">
+          <span>Type</span>
+          <select data-publication-filter-kind>
+            <option value="all">All Types</option>
+            {kindOptions.map((kind) => (
+              <option value={kind}>{publicationKindLabels[kind]}</option>
+            ))}
+          </select>
+        </label>
+
+        <label class="publication-filter-field">
+          <span>Venue</span>
+          <select data-publication-filter-venue>
+            <option value="all">All Venues</option>
+            {venueOptions.map((venue) => (
+              <option value={venue}>{getVenueFilterLabel(venue)}</option>
+            ))}
+          </select>
+        </label>
+
+        {enableSelectedToggle ? (
+          <label class="publication-filter-field">
+            <span>Publications</span>
+            <select data-publication-filter-view>
+              <option value="selected" selected={selectedOnlyByDefault}>Selected Only</option>
+              <option value="all" selected={!selectedOnlyByDefault}>All</option>
+            </select>
+          </label>
+        ) : null}
+
+        <button type="button" class="publication-filter-reset" data-publication-filter-reset>
+          Reset
+        </button>
+
+        <span class="publication-filter-count" data-publication-filter-count>
+          {sorted.length} Publications
+        </span>
+      </div>
+    </div>
+  ) : null}
+
+  {sorted.length === 0 ? (
+    <div class="rounded-xl border border-white/15 bg-white/5 p-6 text-zinc-300">{emptyMessage}</div>
+  ) : (
+    <div class="space-y-7" data-publication-groups>
+      {grouped.map((yearGroup) => (
+        <section data-year-group data-year={String(yearGroup.year)} class="space-y-4">
+          <div data-year-label class="publication-year-sticky sticky z-20 rounded-lg px-3 py-2 backdrop-blur-md">
+            <h2 class="font-tech text-sm uppercase tracking-[0.13em] text-zinc-100">{yearGroup.year}</h2>
+          </div>
+
+          <div class="space-y-4">
+            {yearGroup.kinds.map((kindGroup) => (
+              <section
+                data-kind-group
+                data-kind={kindGroup.kind}
+                class="rounded-xl border border-white/12 bg-white/4 p-4"
+              >
+                <h3 class="font-tech text-xs uppercase tracking-[0.12em] text-zinc-200">
+                  {publicationKindLabels[kindGroup.kind as PublicationKind]}
+                </h3>
+
+                <div class="mt-3 space-y-3">
+                  {kindGroup.entries.map((item) => {
+                    const venueKey = resolveVenueKey(item.venue) ?? "Other";
+                    const firstAuthors = item.authors
+                      .filter((author) => author.isFirstAuthor)
+                      .map((author) => author.name);
+                    const correspondingAuthors = item.authors
+                      .filter((author) => author.isCorrespondingAuthor)
+                      .map((author) => author.name);
+                    const hasBibtex = typeof item.bibtex === "string" && item.bibtex.trim().length > 0;
+                    return (
+                      <article
+                        class="rounded-xl border border-white/15 bg-white/5 p-5"
+                        data-publication-item
+                        data-year={String(parseYear(item.publishedOn))}
+                        data-kind={item.kind}
+                        data-venue={venueKey}
+                        data-selected={item.selected ? "true" : "false"}
+                      >
+                        <div class="flex flex-wrap items-start justify-between gap-2">
+                          <h4 class="text-xl font-semibold leading-snug text-zinc-100">
+                            {item.title}
+                          </h4>
+                          <span class="rounded-full border border-white/20 bg-white/8 px-2 py-0.5 text-[0.62rem] uppercase tracking-[0.1em] text-zinc-200">
+                            {publicationKindLabels[item.kind]}
+                          </span>
+                        </div>
+
+                        <p class="mt-2 text-sm text-zinc-300">
+                          <span class="font-medium text-zinc-200">
+                            {getVenuePaperLabel(venueKey as VenueKey)}
+                          </span>
+                          <span class="mx-2 text-zinc-500">|</span>
+                          <time datetime={item.publishedOn}>{formatDate(item.publishedOn)}</time>
+                        </p>
+
+                        <div class="mt-2 flex flex-wrap items-center gap-2 text-sm leading-relaxed text-zinc-300">
+                          {item.authors.map((author, authorIndex) => {
+                            const authorLink = resolveAuthorLink(author);
+                            const isCurrentMember =
+                              disabledAuthorName && normalizeName(author.name) === disabledAuthorName;
+                            const hasRole = author.isFirstAuthor || author.isCorrespondingAuthor;
+                            const shouldUseChip = Boolean(hasRole || isCurrentMember);
+                            const chipClass = [
+                              "author-chip",
+                              isCurrentMember ? "author-chip--self" : "",
+                              authorLink ? "author-chip--link" : "",
+                            ]
+                              .filter(Boolean)
+                              .join(" ");
+
+                            return (
+                              <span class="inline-flex items-center gap-1.5">
+                                {shouldUseChip ? (
+                                  authorLink ? (
+                                    <a
+                                      href={authorLink.href}
+                                      target={authorLink.external ? "_blank" : undefined}
+                                      rel={authorLink.external ? "noreferrer" : undefined}
+                                      class={chipClass}
+                                    >
+                                      <span class={isCurrentMember ? "author-chip-name author-chip-name--self" : "author-chip-name"}>
+                                        {author.name}
+                                      </span>
+                                      {author.isFirstAuthor ? (
+                                        <span class="author-chip-label author-chip-label--first">First</span>
+                                      ) : null}
+                                      {author.isCorrespondingAuthor ? (
+                                        <span class="author-chip-label author-chip-label--corr">Corr.</span>
+                                      ) : null}
+                                      {isCurrentMember ? (
+                                        <span class="author-chip-label author-chip-label--me">Me</span>
+                                      ) : null}
+                                    </a>
+                                  ) : (
+                                    <span class={chipClass}>
+                                      <span class={isCurrentMember ? "author-chip-name author-chip-name--self" : "author-chip-name"}>
+                                        {author.name}
+                                      </span>
+                                      {author.isFirstAuthor ? (
+                                        <span class="author-chip-label author-chip-label--first">First</span>
+                                      ) : null}
+                                      {author.isCorrespondingAuthor ? (
+                                        <span class="author-chip-label author-chip-label--corr">Corr.</span>
+                                      ) : null}
+                                      {isCurrentMember ? (
+                                        <span class="author-chip-label author-chip-label--me">Me</span>
+                                      ) : null}
+                                    </span>
+                                  )
+                                ) : authorLink ? (
+                                  <a
+                                    href={authorLink.href}
+                                    target={authorLink.external ? "_blank" : undefined}
+                                    rel={authorLink.external ? "noreferrer" : undefined}
+                                    class="author-link text-zinc-100 underline decoration-zinc-500/75 underline-offset-2 transition-colors hover:text-white"
+                                  >
+                                    {author.name}
+                                  </a>
+                                ) : (
+                                  <span>{author.name}</span>
+                                )}
+                                {authorIndex < item.authors.length - 1 ? (
+                                  <span class="px-0.5 text-zinc-500/80" aria-hidden="true">•</span>
+                                ) : null}
+                              </span>
+                            );
+                          })}
+                        </div>
+
+                        {firstAuthors.length > 0 ? (
+                          <div class="mt-2 flex flex-wrap items-center gap-1 text-sm text-zinc-300">
+                            <div class="font-semibold text-zinc-200">First:</div>
+                            <div>
+                              {firstAuthors.map((name, index) => (
+                                <span>
+                                  {index > 0 ? ", " : ""}
+                                  {name}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {correspondingAuthors.length > 0 ? (
+                          <div class="mt-1 flex flex-wrap items-center gap-1 text-sm text-zinc-300">
+                            <div class="font-semibold text-zinc-200">Corresponding:</div>
+                            <div>
+                              {correspondingAuthors.map((name, index) => (
+                                <span>
+                                  {index > 0 ? ", " : ""}
+                                  {name}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+
+                        <div class="mt-4 flex flex-wrap gap-2">
+                          {hasBibtex ? (
+                            <button
+                              type="button"
+                              data-bibtex-open={item.id}
+                              class="cursor-pointer rounded-lg border border-zinc-100/24 bg-white/8 px-3 py-1.5 text-xs font-medium text-zinc-100 hover:bg-white/16"
+                            >
+                              BibTeX
+                            </button>
+                          ) : null}
+
+                          {item.preprintUrl ? (
+                            <a
+                              href={item.preprintUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              class="rounded-lg border border-zinc-100/24 bg-white/8 px-3 py-1.5 text-xs font-medium text-zinc-100 hover:bg-white/16"
+                            >
+                              Preprint
+                            </a>
+                          ) : null}
+
+                          {item.otherUrl ? (
+                            <a
+                              href={item.otherUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              class="rounded-lg border border-zinc-100/24 bg-white/8 px-3 py-1.5 text-xs font-medium text-zinc-100 hover:bg-white/16"
+                            >
+                              Published
+                            </a>
+                          ) : null}
+
+                          {!item.preprintUrl && !item.otherUrl && item.paperUrl ? (
+                            <a
+                              href={item.paperUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              class="rounded-lg border border-zinc-100/24 bg-white/8 px-3 py-1.5 text-xs font-medium text-zinc-100 hover:bg-white/16"
+                            >
+                              Paper
+                            </a>
+                          ) : null}
+
+                          {!item.preprintUrl && !item.otherUrl && !item.paperUrl ? (
+                            <span class="rounded-lg border border-zinc-100/12 bg-white/4 px-3 py-1.5 text-xs text-zinc-400">
+                              Paper N/A
+                            </span>
+                          ) : null}
+
+                          {item.codeUrl ? (
+                            <a
+                              href={item.codeUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              class="rounded-lg border border-zinc-100/24 bg-white/8 px-3 py-1.5 text-xs font-medium text-zinc-100 hover:bg-white/16"
+                            >
+                              Code
+                            </a>
+                          ) : null}
+                        </div>
+
+                        {hasBibtex ? (
+                          <dialog
+                            id={`bibtex-dialog-${item.id}`}
+                            data-bibtex-dialog
+                            class="bibtex-dialog m-auto w-[min(92vw,44rem)] rounded-xl border border-zinc-100/18 bg-[rgba(16,16,20,0.97)] p-0 text-zinc-100 shadow-[0_28px_60px_rgba(0,0,0,0.5)] backdrop:bg-[rgba(8,8,12,0.62)] backdrop:transition-opacity backdrop:duration-250"
+                          >
+                            <div class="border-b border-white/10 px-4 py-3">
+                              <div class="flex items-start justify-between gap-3">
+                                <p class="pr-4 text-sm font-medium leading-relaxed">{item.title}</p>
+                                <div class="flex shrink-0 items-center gap-2">
+                                  <button
+                                    type="button"
+                                    data-bibtex-copy={item.id}
+                                    class="cursor-pointer rounded-md border border-white/18 bg-white/6 px-2 py-1 text-xs text-zinc-200 hover:bg-white/14"
+                                  >
+                                    Copy
+                                  </button>
+                                  <button
+                                    type="button"
+                                    data-bibtex-close={item.id}
+                                    class="cursor-pointer rounded-md border border-white/18 bg-white/6 px-2 py-1 text-xs text-zinc-200 hover:bg-white/14"
+                                  >
+                                    Close
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            <pre class="max-h-[62vh] overflow-auto px-4 py-3 text-xs leading-relaxed text-zinc-200">{item.bibtex}</pre>
+                          </dialog>
+                        ) : null}
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  )}
+
+  <div class="hidden rounded-xl border border-white/12 bg-white/4 p-4 text-sm text-zinc-300" data-publication-empty>
+    No publications match this filter combination.
+  </div>
+</section>
+
+<style>
+  .author-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.12rem;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    background: rgba(61, 81, 119, 0.22);
+    color: #e5e7eb;
+    border-radius: 0.62rem;
+    padding: 0.18rem 0.62rem;
+    text-decoration: none;
+  }
+
+  .publication-filters {
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(6px);
+    top: var(--publication-header-offset, 5.25rem);
+    box-shadow: 0 10px 24px rgba(2, 6, 18, 0.18);
+  }
+
+  .publication-filter-field {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 10.5rem;
+  }
+
+  .publication-filter-field > span {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #78879b;
+    font-weight: 700;
+    text-shadow: none;
+  }
+
+  .publication-filter-field > select {
+    appearance: none;
+    height: 2rem;
+    border-radius: 0.55rem;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    background: rgba(15, 23, 42, 0.52);
+    color: #f1f5f9;
+    padding: 0 0.55rem;
+    font-size: 0.78rem;
+    line-height: 1.2;
+  }
+
+  .publication-filter-field > select:focus-visible {
+    outline: none;
+    border-color: rgba(125, 211, 252, 0.75);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+  }
+
+  .publication-filter-field > select option {
+    background: #0f172a;
+    color: #f8fafc;
+  }
+
+  .publication-filter-reset {
+    height: 2rem;
+    border-radius: 0.55rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: #e4e4e7;
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0 0.7rem;
+    cursor: pointer;
+  }
+
+  .publication-filter-reset:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .publication-filter-reset:focus-visible {
+    outline: none;
+    border-color: rgba(125, 211, 252, 0.75);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+  }
+
+  .publication-filter-count {
+    margin-left: auto;
+    font-size: 0.74rem;
+    color: #a1a1aa;
+  }
+
+  .publication-context-label {
+    color: #e2e8f0;
+  }
+
+  .publication-context-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.42rem;
+  }
+
+  .publication-context-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.34rem;
+    border: 1px solid rgba(174, 194, 232, 0.34);
+    background: linear-gradient(145deg, rgba(37, 48, 71, 0.72), rgba(18, 27, 43, 0.66));
+    border-radius: 999px;
+    padding: 0.16rem 0.26rem 0.16rem 0.5rem;
+    line-height: 1.3;
+    font-size: 0.69rem;
+    color: #e7edf9;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 6px 12px rgba(2, 6, 18, 0.2);
+  }
+
+  .publication-context-chip-key {
+    font-weight: 650;
+    letter-spacing: 0.02em;
+    color: #f2f6ff;
+  }
+
+  .publication-context-chip-value {
+    border-radius: 999px;
+    padding: 0.06rem 0.42rem;
+    border: 1px solid rgba(181, 206, 247, 0.3);
+    background: rgba(38, 74, 161, 0.18);
+    color: #e8f0ff;
+    font-weight: 600;
+  }
+
+  .publication-year-sticky {
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    background: rgba(34, 38, 49, 0.92);
+    box-shadow: 0 8px 20px rgba(2, 6, 18, 0.3);
+    top: calc(var(--publication-header-offset, 5.25rem) + var(--publication-filter-height, 0px) + 0.55rem);
+    opacity: 0.56;
+    transform: translateY(-2px) scale(0.995);
+    transition: opacity 220ms ease, transform 220ms ease, border-color 220ms ease, background-color 220ms ease;
+  }
+
+  .publication-year-sticky.is-active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    border-color: rgba(186, 206, 255, 0.38);
+    background: rgba(42, 49, 66, 0.97);
+  }
+
+  .author-chip--link {
+    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+  }
+
+  .author-chip--link:hover {
+    background: rgba(82, 109, 160, 0.32);
+    border-color: rgba(191, 219, 254, 0.38);
+    color: #ffffff;
+  }
+
+  .author-chip--self {
+    border-color: rgba(110, 231, 183, 0.34);
+    background: rgba(110, 231, 183, 0.1);
+  }
+
+  .author-chip-name {
+    line-height: 1.2;
+  }
+
+  .author-chip-name--self {
+    font-weight: 600;
+  }
+
+  .author-chip-label {
+    border-radius: 999px;
+    padding: 0.02rem 0.24rem;
+    font-size: 0.54rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .author-chip-name + .author-chip-label {
+    margin-left: 0.08rem;
+  }
+
+  .author-chip-label + .author-chip-label {
+    margin-left: -0.04rem;
+  }
+
+  .author-chip-label--first {
+    background: rgba(217, 70, 239, 0.2);
+    color: #fae8ff;
+  }
+
+  .author-chip-label--corr {
+    background: rgba(139, 92, 246, 0.22);
+    color: #ede9fe;
+  }
+
+  .author-chip-label--me {
+    background: rgba(16, 185, 129, 0.2);
+    color: #a7f3d0;
+  }
+
+  :global(html[data-theme="light"] .author-chip) {
+    border-color: rgba(71, 85, 105, 0.24);
+    background: rgba(224, 235, 252, 0.72);
+    color: #1e293b;
+  }
+
+  :global(html[data-theme="light"] .author-chip--link:hover) {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(37, 99, 235, 0.36);
+    color: #1e3a8a;
+  }
+
+  :global(html[data-theme="light"] .author-chip--self) {
+    border-color: rgba(15, 118, 110, 0.34);
+    background: rgba(20, 184, 166, 0.12);
+    color: #0f766e;
+  }
+
+  :global(html[data-theme="light"] .author-chip-label--first) {
+    background: rgba(217, 70, 239, 0.16);
+    color: #86198f;
+  }
+
+  :global(html[data-theme="light"] .author-chip-label--corr) {
+    background: rgba(139, 92, 246, 0.18);
+    color: #6d28d9;
+  }
+
+  :global(html[data-theme="light"] .author-chip-label--me) {
+    background: rgba(20, 184, 166, 0.16);
+    color: #0f766e;
+  }
+
+  :global(html[data-theme="light"] .publication-filter-field > span) {
+    color: #334155;
+    font-weight: 700;
+    text-shadow: none;
+  }
+
+  :global(html[data-theme="light"] .publication-filter-field > select) {
+    border-color: rgba(51, 65, 85, 0.34);
+    background: rgba(255, 255, 255, 0.98);
+    color: #1f2937;
+  }
+
+  :global(html[data-theme="light"] .publication-filter-field > select option) {
+    background: #ffffff;
+    color: #0f172a;
+  }
+
+  :global(html[data-theme="light"] .publication-filters) {
+    border-color: rgba(51, 65, 85, 0.24);
+    background: rgba(244, 249, 255, 0.95);
+    box-shadow: 0 10px 24px rgba(98, 124, 158, 0.16);
+  }
+
+  :global(html[data-theme="light"] .publication-filter-reset) {
+    border-color: rgba(51, 65, 85, 0.24);
+    background: rgba(241, 245, 249, 0.9);
+    color: #1f2937;
+  }
+
+  :global(html[data-theme="light"] .publication-filter-reset:hover) {
+    background: rgba(226, 232, 240, 0.96);
+  }
+
+  :global(html[data-theme="light"] .publication-filter-count) {
+    color: #475569;
+  }
+
+  :global(html[data-theme="light"] .publication-context-label) {
+    color: #0f172a;
+  }
+
+  :global(html[data-theme="light"] .publication-context-chip) {
+    border-color: rgba(71, 85, 105, 0.26);
+    background: linear-gradient(140deg, rgba(236, 243, 252, 0.95), rgba(247, 250, 255, 0.98));
+    color: #0f172a;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.86), 0 4px 10px rgba(109, 131, 160, 0.12);
+  }
+
+  :global(html[data-theme="light"] .publication-context-chip-key) {
+    color: #334155;
+  }
+
+  :global(html[data-theme="light"] .publication-context-chip-value) {
+    border-color: rgba(59, 130, 246, 0.28);
+    background: rgba(219, 234, 254, 0.96);
+    color: #1e40af;
+  }
+
+  :global(html[data-theme="light"] .publication-year-sticky) {
+    border-color: rgba(51, 65, 85, 0.28);
+    background: rgba(236, 244, 255, 0.96);
+    box-shadow: 0 10px 22px rgba(93, 119, 151, 0.16);
+  }
+
+  :global(html[data-theme="light"] .publication-year-sticky.is-active) {
+    border-color: rgba(30, 64, 175, 0.3);
+    background: rgba(223, 238, 255, 0.98);
+  }
+
+  :global(html[data-theme="light"] .publication-year-sticky h2) {
+    color: #0f172a;
+  }
+
+  :global(.bibtex-dialog) {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+    transition: opacity 220ms ease, transform 260ms cubic-bezier(0.2, 0.75, 0.2, 1);
+  }
+
+  :global(.bibtex-dialog[open].is-visible) {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  :global(.bibtex-dialog::backdrop) {
+    opacity: 0;
+    transition: opacity 220ms ease;
+  }
+
+  :global(.bibtex-dialog[open].is-visible::backdrop) {
+    opacity: 1;
+  }
+
+  :global(html[data-theme="light"] .bibtex-dialog) {
+    border-color: rgba(51, 65, 85, 0.25);
+    background: rgba(251, 254, 255, 0.98);
+    color: #0f172a;
+    box-shadow: 0 26px 56px rgba(92, 120, 156, 0.26);
+  }
+
+  :global(html[data-theme="light"] .bibtex-dialog::backdrop) {
+    background: rgba(42, 57, 81, 0.26);
+  }
+</style>
+
+<script>
+  const normalize = (value: string) => value.trim().toLowerCase().replace(/\s+/g, " ");
+
+  const openButtons = document.querySelectorAll("[data-bibtex-open]");
+  openButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const publicationId = button.getAttribute("data-bibtex-open");
+      const dialog = document.getElementById(`bibtex-dialog-${publicationId}`);
+      if (dialog instanceof HTMLDialogElement) {
+        dialog.showModal();
+        window.requestAnimationFrame(() => {
+          dialog.classList.add("is-visible");
+        });
+      }
+    });
+  });
+
+  const closeButtons = document.querySelectorAll("[data-bibtex-close]");
+  closeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const publicationId = button.getAttribute("data-bibtex-close");
+      const dialog = document.getElementById(`bibtex-dialog-${publicationId}`);
+      if (dialog instanceof HTMLDialogElement) {
+        dialog.classList.remove("is-visible");
+        window.setTimeout(() => {
+          if (dialog.open) {
+            dialog.close();
+          }
+        }, 220);
+      }
+    });
+  });
+
+  const copyButtons = document.querySelectorAll("[data-bibtex-copy]");
+  copyButtons.forEach((button) => {
+    button.addEventListener("click", async () => {
+      const publicationId = button.getAttribute("data-bibtex-copy");
+      const dialog = document.getElementById(`bibtex-dialog-${publicationId}`);
+      if (!(dialog instanceof HTMLDialogElement)) {
+        return;
+      }
+
+      const content = dialog.querySelector("pre")?.textContent ?? "";
+      if (!content.trim()) {
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(content);
+        if (button instanceof HTMLButtonElement) {
+          const original = button.textContent;
+          button.textContent = "Copied";
+          window.setTimeout(() => {
+            button.textContent = original;
+          }, 1200);
+        }
+      } catch {
+        if (button instanceof HTMLButtonElement) {
+          const original = button.textContent;
+          button.textContent = "Failed";
+          window.setTimeout(() => {
+            button.textContent = original;
+          }, 1200);
+        }
+      }
+    });
+  });
+
+  const dialogs = document.querySelectorAll("dialog[id^='bibtex-dialog-']");
+  dialogs.forEach((dialog) => {
+    dialog.addEventListener("click", (event) => {
+      const target = event.currentTarget;
+      if (!(target instanceof HTMLDialogElement)) {
+        return;
+      }
+
+      if (event.target === target) {
+        target.classList.remove("is-visible");
+        window.setTimeout(() => {
+          if (target.open) {
+            target.close();
+          }
+        }, 220);
+      }
+    });
+
+    dialog.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      if (!(dialog instanceof HTMLDialogElement)) {
+        return;
+      }
+
+      dialog.classList.remove("is-visible");
+      window.setTimeout(() => {
+        if (dialog.open) {
+          dialog.close();
+        }
+      }, 220);
+    });
+  });
+
+  const roots = document.querySelectorAll("[data-publication-root]");
+  roots.forEach((root) => {
+    if (!(root instanceof HTMLElement)) {
+      return;
+    }
+    const rootEl = root;
+
+    const yearSelect = rootEl.querySelector("[data-publication-filter-year]");
+    const kindSelect = rootEl.querySelector("[data-publication-filter-kind]");
+    const venueSelect = rootEl.querySelector("[data-publication-filter-venue]");
+    const viewSelect = rootEl.querySelector("[data-publication-filter-view]");
+    const resetButton = rootEl.querySelector("[data-publication-filter-reset]");
+    const countEl = rootEl.querySelector("[data-publication-filter-count]");
+    const contextEl = rootEl.querySelector("[data-publication-context]");
+    const scopeValueEl = rootEl.querySelector("[data-chip-scope]");
+    const yearValueEl = rootEl.querySelector("[data-chip-year]");
+    const typeValueEl = rootEl.querySelector("[data-chip-type]");
+    const venueValueEl = rootEl.querySelector("[data-chip-venue]");
+    const emptyEl = rootEl.querySelector("[data-publication-empty]");
+    const items = Array.from(rootEl.querySelectorAll("[data-publication-item]"));
+    const yearGroups = Array.from(rootEl.querySelectorAll("[data-year-group]"));
+    const kindGroups = Array.from(rootEl.querySelectorAll("[data-kind-group]"));
+    const yearLabels = Array.from(rootEl.querySelectorAll("[data-year-label]"));
+
+    if (!(yearSelect instanceof HTMLSelectElement) || !(kindSelect instanceof HTMLSelectElement) || !(venueSelect instanceof HTMLSelectElement)) {
+      return;
+    }
+
+    const selectedDefault = rootEl.getAttribute("data-selected-default") === "selected";
+    let selectedOnly = viewSelect instanceof HTMLSelectElement ? viewSelect.value === "selected" : selectedDefault;
+
+    const measureStickyOffsets = () => {
+      const filterHeight =
+        yearSelect instanceof HTMLSelectElement
+          ? (yearSelect.closest("[data-publication-filters]") as HTMLElement | null)?.getBoundingClientRect().height ?? 0
+          : 0;
+      rootEl.style.setProperty("--publication-filter-height", `${Math.ceil(filterHeight)}px`);
+    };
+
+    const updateActiveYearLabel = () => {
+      const headerOffsetRaw = getComputedStyle(rootEl).getPropertyValue("--publication-header-offset").trim();
+      const headerOffset = Number.parseFloat(headerOffsetRaw) || 0;
+      const filterHeightRaw = getComputedStyle(rootEl).getPropertyValue("--publication-filter-height").trim();
+      const filterHeight = Number.parseFloat(filterHeightRaw) || 0;
+      const stickyLine = headerOffset * 16 + filterHeight + 12;
+
+      const visibleGroups = yearGroups.filter((group) => !group.classList.contains("hidden"));
+      let activeGroup: Element | null = visibleGroups[0] ?? null;
+
+      visibleGroups.forEach((group) => {
+        const top = group.getBoundingClientRect().top;
+        if (top <= stickyLine) {
+          activeGroup = group;
+        }
+      });
+
+      yearLabels.forEach((label) => {
+        const group = label.closest("[data-year-group]");
+        const isActive = group === activeGroup;
+        label.classList.toggle("is-active", isActive);
+      });
+    };
+
+    const toTitleCase = (value: string) =>
+      value
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+
+    const readSelectedLabel = (select: HTMLSelectElement) =>
+      select.options[select.selectedIndex]?.textContent?.trim() || "All";
+
+    const renderContextChips = (
+      scopeLabel: string,
+      yearLabel: string,
+      typeLabel: string,
+      venueLabel: string,
+    ) => {
+      if (!(contextEl instanceof HTMLElement)) {
+        return;
+      }
+
+      if (scopeValueEl instanceof HTMLElement) {
+        scopeValueEl.textContent = scopeLabel;
+      }
+      if (yearValueEl instanceof HTMLElement) {
+        yearValueEl.textContent = yearLabel;
+      }
+      if (typeValueEl instanceof HTMLElement) {
+        typeValueEl.textContent = typeLabel;
+      }
+      if (venueValueEl instanceof HTMLElement) {
+        venueValueEl.textContent = venueLabel;
+      }
+    };
+
+    let rafId = 0;
+    const scheduleActiveYearUpdate = () => {
+      if (rafId) {
+        return;
+      }
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        updateActiveYearLabel();
+      });
+    };
+
+    const applyFilters = () => {
+      const yearValue = normalize(yearSelect.value);
+      const kindValue = normalize(kindSelect.value);
+      const venueValue = normalize(venueSelect.value);
+      let visibleCount = 0;
+
+      items.forEach((item) => {
+        const itemYear = normalize(item.getAttribute("data-year") ?? "");
+        const itemKind = normalize(item.getAttribute("data-kind") ?? "");
+        const itemVenue = normalize(item.getAttribute("data-venue") ?? "");
+        const isSelected = (item.getAttribute("data-selected") ?? "false") === "true";
+
+        const matchesYear = yearValue === "all" || itemYear === yearValue;
+        const matchesKind = kindValue === "all" || itemKind === kindValue;
+        const matchesVenue = venueValue === "all" || itemVenue === venueValue;
+        const matchesSelected = !selectedOnly || isSelected;
+        const visible = matchesYear && matchesKind && matchesVenue && matchesSelected;
+
+        item.classList.toggle("hidden", !visible);
+        if (visible) {
+          visibleCount += 1;
+        }
+      });
+
+      kindGroups.forEach((kindGroup) => {
+        const visibleItems = kindGroup.querySelectorAll("[data-publication-item]:not(.hidden)").length;
+        kindGroup.classList.toggle("hidden", visibleItems === 0);
+      });
+
+      yearGroups.forEach((yearGroup) => {
+        const visibleKinds = yearGroup.querySelectorAll("[data-kind-group]:not(.hidden)").length;
+        yearGroup.classList.toggle("hidden", visibleKinds === 0);
+      });
+
+      if (countEl) {
+        countEl.textContent = `${visibleCount} Publication${visibleCount === 1 ? "" : "s"}`;
+      }
+
+      const scopeLabel = selectedOnly ? "Selected Only" : "All";
+      const yearLabel = yearValue === "all" ? "All" : readSelectedLabel(yearSelect);
+      const typeLabel = kindValue === "all" ? "All" : toTitleCase(readSelectedLabel(kindSelect));
+      const venueLabel = venueValue === "all" ? "All" : readSelectedLabel(venueSelect);
+      renderContextChips(scopeLabel, yearLabel, typeLabel, venueLabel);
+
+      if (emptyEl instanceof HTMLElement) {
+        emptyEl.classList.toggle("hidden", visibleCount > 0);
+      }
+
+      scheduleActiveYearUpdate();
+    };
+
+    yearSelect.addEventListener("change", applyFilters);
+    kindSelect.addEventListener("change", applyFilters);
+    venueSelect.addEventListener("change", applyFilters);
+
+    if (viewSelect instanceof HTMLSelectElement) {
+      viewSelect.addEventListener("change", () => {
+        selectedOnly = viewSelect.value === "selected";
+        applyFilters();
+      });
+    }
+
+    if (resetButton instanceof HTMLButtonElement) {
+      resetButton.addEventListener("click", () => {
+        yearSelect.value = "all";
+        kindSelect.value = "all";
+        venueSelect.value = "all";
+        if (viewSelect instanceof HTMLSelectElement) {
+          viewSelect.value = selectedDefault ? "selected" : "all";
+          selectedOnly = viewSelect.value === "selected";
+        }
+        applyFilters();
+      });
+    }
+
+    measureStickyOffsets();
+    window.addEventListener("resize", () => {
+      measureStickyOffsets();
+      scheduleActiveYearUpdate();
+    });
+    window.addEventListener("scroll", scheduleActiveYearUpdate, { passive: true });
+
+    applyFilters();
+  });
+</script>
